@@ -63,7 +63,7 @@ int arg_parser(int argc, char * argv[]){
 void init_arg(){
     arg_debug_mode = 0;
     arg_usage_sum = 0;
-    strcpy(arg_log_file, "./myhttpd.log");
+    strcpy(arg_log_file, "N/A");
     arg_listen_port = 8080;
     strcpy(arg_root_folder, "./www/");
     arg_queue_time = 60;
@@ -71,6 +71,67 @@ void init_arg(){
     arg_schedule_mode = 0;
 }
 
-int log_to_file(char *remote_ip_addr[], ){
+int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int *status, int *response_length){
+    if (!strcmp(arg_log_file, "N/A")){return 0;}
+    FILE * pFile;
+    if (pFile = fopen(arg_log_file, "r")){ 
+        fclose(pFile);
+        pFile = fopen(arg_log_file, "a");
+    } else {
+        pFile = fopen(arg_log_file, "w");
+    }
+    
+    struct tm *ptm_q, *ptm_e;
+    ptm_q = gmtime ( time_queued );
+    ptm_e = gmtime ( time_exec );
+    char monstr_q[5], monstr_e[5];
+    _int_mon2str_(&(ptm_q->tm_mon), monstr_q);
+    _int_mon2str_(&(ptm_e->tm_mon), monstr_e);
+    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %d", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_e->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, *status, *response_length);
+    fclose(pFile);
+}
 
+void _int_mon2str_(int * monint, char monstr[]){
+   switch (*monint){
+       case 0:
+            strcpy(monstr, "Jan");
+            break;
+       case 1:
+            strcpy(monstr, "Feb");
+            break;
+       case 2:
+            strcpy(monstr, "Mar");
+            break;
+       case 3:
+            strcpy(monstr, "Apr");
+            break;
+       case 4:
+            strcpy(monstr, "May");
+            break;
+       case 5:
+            strcpy(monstr, "Jun");
+            break;
+       case 6:
+            strcpy(monstr, "Jul");
+            break;
+       case 7:
+            strcpy(monstr, "Aug");
+            break;
+       case 8:
+            strcpy(monstr, "Sep");
+            break;
+       case 9:
+            strcpy(monstr, "Oct");
+            break;
+       case 10:
+            strcpy(monstr, "Nov");
+            break;
+       case 11:
+            strcpy(monstr, "Dec");
+            break;
+       default:
+            strcpy(monstr, "n/a");
+            break;
+   } 
+   return;
 }
