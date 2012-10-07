@@ -18,8 +18,8 @@ void * dequeue(){
     if (_queue_num_element_ > 0){
         void * head_data = _queue_array_[0];
         // increase the pointer to the next queue element;
-        _queue_array_ = --_queue_num_element_ > 0 ? _queue_array_ = &(_queue_array_[1]) : NULL;
-        --_queue_num_allocated_;
+        _queue_array_ = --_queue_num_allocated_ > 0 ? _queue_array_ = &(_queue_array_[1]) : NULL;
+        --_queue_num_element_;
         return head_data;
     }
     return NULL;
@@ -28,4 +28,6 @@ void * dequeue(){
 void queue_free(){
     free(_queue_array_);
     _queue_array_ = NULL;
+    _queue_num_allocated_ = 0;
+    _queue_num_element_ = 0;
 }
