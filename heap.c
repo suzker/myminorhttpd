@@ -61,3 +61,7 @@ void _heapify_bottom_up_(int (*ptCmpFunc)(long *a, long *b)){
         parent = (child-1)/2;
     } 
 }
+
+void heap_free(){
+    free(_heap_array_);
+}

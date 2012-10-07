@@ -50,3 +50,9 @@ void _heapify_top_down_(int (*ptCmpFunc)(long *, long *));
     ptrCmpFunc *: a function pointer to the comparison function taking 2 long inputs
 */
 void _heapify_bottom_up_(int (*ptCmpFunc)(long *, long *));
+
+/**
+ function heap_free
+  call to free the memory allocated for the heap
+*/
+void heap_free();

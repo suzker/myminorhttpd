@@ -1,0 +1,6 @@
+A Minor HTTP 1.0 server w/ POSIX multi-threading and shecheduling functions
+
+author: Zhiliang Su
+email: zsu2 [at] buffalo [dot] edu
+
+source code under APACHE liscense
