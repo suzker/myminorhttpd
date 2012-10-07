@@ -1,13 +1,15 @@
 #include "heap.h"
 
 int add_to_heap(struct heap_data * new_data, int (*ptCmpFunc)(long *a, long *b)){
-    _heap_num_allocated_ = _heap_num_allocated_ == 0 ? _heap_init_allocate_num_ : _heap_num_allocated_*2;
-    struct heap_data **_tmp = realloc(_heap_array_, (_heap_num_allocated_*sizeof(struct heap_data)));
-    if (!_tmp){
-        printf("[ERR] Couldn't re-allocate memory for the heap, exiting... \n");
-        return (-1);
+    if (_heap_num_element_ == _heap_num_allocated_ ){
+        _heap_num_allocated_ = _heap_num_allocated_ == 0 ? _heap_init_allocate_num_ : _heap_num_allocated_*2;
+        struct heap_data **_tmp = realloc(_heap_array_, (_heap_num_allocated_*sizeof(struct heap_data *)));
+        if (!_tmp){
+            printf("[ERR] Couldn't re-allocate memory for the heap, exiting... \n");
+            return (-1);
+        }
+        _heap_array_ = _tmp;
     }
-    _heap_array_ = _tmp;
     _heap_array_[_heap_num_element_++] = new_data;
     _heapify_bottom_top_(ptCmpFunc);
     return 0;
@@ -20,6 +22,7 @@ struct heap_data * heap_pop(int (*ptCmpFunc)(long *a, long *b)){
     _heap_array_[0] = _heap_array_[--_heap_num_element_];
     _heap_array_[_heap_num_element_ - 1] = NULL;
     _heapify_top_down_(ptCmpFunc);
+    return tmp;
 }
 
 void _heapify_top_down_(int (*ptCmpFunc)(long *a, long *b)){
@@ -64,4 +67,5 @@ void _heapify_bottom_up_(int (*ptCmpFunc)(long *a, long *b)){
 
 void heap_free(){
     free(_heap_array_);
+    _heap_array_ = NULL;
 }

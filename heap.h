@@ -1,6 +1,6 @@
 /**
  a heap structure implementation in C using a dynamic array
-     author: Zhiliang Su (zsu2@buffalo.edu)
+     author: Zhiliang Su (zsu2[at]buffalo[dot]edu)
      revision: 06 Oct 2012
 */
 #include <stdio.h>

@@ -17,5 +17,4 @@ int main(int argc, char *argv[]){
         printf("schedule mode: %d\n", arg_schedule_mode);
     }
     return 0;
-    
 }
