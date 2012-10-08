@@ -1,11 +1,13 @@
+#ifndef _HEADER_UTILITY_
+#define _HEADER_UTILITY_
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-// ****************************
-// static variables - arguments
-// ****************************
+//***************************
+// variables - arguments
+//***************************
 int arg_debug_mode;     //  to enable single thread non-daemond mode (-d)
 int arg_usage_sum;      //  to print usage summary in the end (-h)
 char arg_log_file[1000];     //  path to store log file (-l)
@@ -46,10 +48,12 @@ void init_arg();
 int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int *status, int *response_length);
 
 /**
- function: _ini_mon2str_
+ function: _ini_mon2str_ (private)
   to convert the month into string
   input:
     int *: month in integer
     cahr [] : char array to store result
 */
 void _int_mon2str_(int * monint, char monstr[]);
+
+#endif

@@ -5,7 +5,7 @@ int _heap_num_element_ = 0;
 int _heap_num_allocated_ = 0;
 const int _heap_init_allocate_num_ = 4;
 
-int add_to_heap(struct heap_data * new_data, int (*ptCmpFunc)(long *a, long *b)){
+int heap_push(struct heap_data * new_data, int (*ptCmpFunc)(long *a, long *b)){
     if (_heap_num_element_ == _heap_num_allocated_ ){
         _heap_num_allocated_ = _heap_num_allocated_ == 0 ? _heap_init_allocate_num_ : _heap_num_allocated_*2;
         struct heap_data **_tmp = realloc(_heap_array_, (_heap_num_allocated_*sizeof(struct heap_data *)));
@@ -16,7 +16,8 @@ int add_to_heap(struct heap_data * new_data, int (*ptCmpFunc)(long *a, long *b))
         _heap_array_ = _tmp;
     }
     _heap_array_[_heap_num_element_++] = new_data;
-    _heapify_bottom_top_(ptCmpFunc);
+    printf("db -> %d\n", _heap_num_element_);
+    _heapify_bottom_up_(ptCmpFunc);
     return 0;
 }
 
@@ -25,7 +26,7 @@ struct heap_data * heap_pop(int (*ptCmpFunc)(long *a, long *b)){
     struct heap_data * tmp = _heap_array_[0];
     // fill the hole left on root with the right-bottom-most element
     _heap_array_[0] = _heap_array_[--_heap_num_element_];
-    _heap_array_[_heap_num_element_ - 1] = NULL;
+    _heap_array_[_heap_num_element_] = NULL;   
     _heapify_top_down_(ptCmpFunc);
     return tmp;
 }
@@ -34,14 +35,14 @@ void _heapify_top_down_(int (*ptCmpFunc)(long *a, long *b)){
     int i = 0;
     struct heap_data * tmp;
     int lc, rc, maxc;
-        while (1){
+    while (1){
         lc = 2*i+1;
         rc = lc+1;
-        if (lc > _heap_num_element_){
+        if (lc > _heap_num_element_ - 1){
             break;
         }
         maxc = lc;
-        if (rc < _heap_num_element_ && ptCmpFunc(&(_heap_array_[rc]->cmp), &(_heap_array_[lc]->cmp))>0){
+        if (rc < _heap_num_element_ - 1 && ptCmpFunc(&(_heap_array_[rc]->cmp), &(_heap_array_[lc]->cmp))>0){
             maxc = rc;
         }
         if (ptCmpFunc(&(_heap_array_[i]->cmp), &(_heap_array_[maxc]->cmp)) >= 0 ){
@@ -73,4 +74,6 @@ void _heapify_bottom_up_(int (*ptCmpFunc)(long *a, long *b)){
 void heap_free(){
     free(_heap_array_);
     _heap_array_ = NULL;
+    _heap_num_element_ = 0;
+    _heap_num_allocated_ = 0;
 }

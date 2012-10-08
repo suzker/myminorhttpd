@@ -14,21 +14,21 @@ struct heap_data {
 };
 
 /**
- function: add_to_heap
+ function: heap_push
   add to heap method for the heap structure, will add a heap to the end of the tree and auto reheap
   input:
-    heap_data * new_data: pointer to the new heap_node
+    heap_data * new_data: pointer to the new heap_data
     ptrCmpFunc *: a function pointer to the comparison function taking 2 long inputs
   output:
     int: 0 indicates unsucess otherwise sucess added a new node
 */
-int add_to_heap(struct heap_data * new_data, int (*ptCmpFunc)(long *, long *));
+int heap_push(struct heap_data * new_data, int (*ptCmpFunc)(long *, long *));
 
 /**
  function: pop
   pop the root node out of the heap, will auto reheap after popped
   output:
-   heap_node * : a pointer to the root node
+   heap_data * : a pointer to the root node
 */
 struct heap_data * heap_pop(int (*ptCmpFunc)(long *, long *));
 
