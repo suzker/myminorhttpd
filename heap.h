@@ -76,4 +76,11 @@ void _heapify_bottom_up_(struct heap_entity * heap_ptr_entity, int (*ptCmpFunc)(
 */
 void heap_free(struct heap_entity * heap_ptr_entity);
 
+/**
+ function heap_is_empty
+  method to check if the heap is empty
+  output:
+    0 for not empty while 1 for is empty
+*/
+int heap_is_empty();
 #endif
