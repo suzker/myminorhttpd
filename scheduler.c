@@ -23,7 +23,8 @@ void scheduler_init(){
             queue_init(&scheduler_queue, scheduler_max_wait);
             break;
     }
-    // TODO: start the job emitting thread
+    // start the job emitting thread
+    pthread_create(&scheduler_thread, NULL, scheduler_emit_job_thread_routin, NULL);
 }
 
 struct scheduler_job scheduler_create_job(void * job_data, long len){
@@ -35,22 +36,22 @@ struct scheduler_job scheduler_create_job(void * job_data, long len){
 
 int scheduler_handle_new_job(struct scheduler_job * new_job){
     int _status;
-    int _isempty; // if it's empty before adding the new job, will signal the emit thread
+    int _isempty; // if it's empty before adding the new job, will signal the emit thread after new job added
     pthread_mutex_lock(&scheduler_joblist_mutex);
      switch (arg_schedule_mode){
         case MODE_FIFO:
-            _isempty = queue_is_empty();
+            _isempty = queue_is_empty(&scheduler_queue);
             _status =  queue_enqueue(&scheduler_queue , new_job);
             break;
         case MODE_SJF:
-            _isempty = heap_is_empty();
+            _isempty = heap_is_empty(&scheduler_heap);
             struct heap_data new_heap_data;
             new_heap_data.data = new_job;
             new_heap_data.cmp = new_job->len;
             _status = heap_push(&scheduler_heap, &new_heap_data, cmp_func);
             break;
         default:
-            _isempty = queue_is_empty();
+            _isempty = queue_is_empty(&scheduler_queue);
             _status = queue_enqueue(&scheduler_queue , new_job);
             break;
     }
@@ -67,7 +68,7 @@ void* scheduler_emit_job_thread_routin(void* arg){
     struct scheduler_job * _next_job_ptr;
     while (1){
         pthread_mutex_lock(&scheduler_joblist_mutex);
-        if (!scheduler_is_joblist_empty){
+        if (!scheduler_is_joblist_empty()){
             _next_job_ptr = scheduler_pop();
             if (_next_job_ptr){
                 // TODO: time to call the "tpool_assign_job"
@@ -114,13 +115,13 @@ int scheduler_is_joblist_empty(){
 
 struct scheduler_job * scheduler_pop(){
     struct scheduler_job * _popped_out;
+    struct heap_data * _tmp_heap_data;
     switch (arg_schedule_mode){
         case MODE_FIFO:
             _popped_out = (struct scheduler_job *)(queue_dequeue(&scheduler_queue));
             break;
         case MODE_SJF:
-            struct heap_data * = _tmp_heap_data;
-            _tmp_heap_data = heap_pop(&scheduler_heap);
+            _tmp_heap_data = heap_pop(&scheduler_heap, cmp_func);
             _popped_out = (struct scheduler_job *)(_tmp_heap_data->data);
             break;
         default:
