@@ -3,6 +3,8 @@
      author: Zhiliang Su (zsu2[at]buffalo[dot]edu)
      revision: 06 Oct 2012
 */
+#ifndef _HEADER_HEAP_
+#define _HEADER_HEAP_
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -10,11 +12,6 @@ struct heap_data {
     void * data;
     long cmp;
 };
-
-struct heap_data ** _heap_array_;
-int _heap_num_element_ = 0;
-int _heap_num_allocated_ = 0;
-const int _heap_init_allocate_num_ = 4;
 
 /**
  function: add_to_heap
@@ -56,3 +53,5 @@ void _heapify_bottom_up_(int (*ptCmpFunc)(long *, long *));
   call to free the memory allocated for the heap
 */
 void heap_free();
+
+#endif

@@ -1,5 +1,10 @@
 #include "heap.h"
 
+struct heap_data ** _heap_array_;
+int _heap_num_element_ = 0;
+int _heap_num_allocated_ = 0;
+const int _heap_init_allocate_num_ = 4;
+
 int add_to_heap(struct heap_data * new_data, int (*ptCmpFunc)(long *a, long *b)){
     if (_heap_num_element_ == _heap_num_allocated_ ){
         _heap_num_allocated_ = _heap_num_allocated_ == 0 ? _heap_init_allocate_num_ : _heap_num_allocated_*2;
