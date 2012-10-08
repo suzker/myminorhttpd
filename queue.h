@@ -35,7 +35,7 @@ int queue_init(struct queue_entity * ptr_queue_entity, int size);
     struct queue_entity * : a pointer to the target queue entity
     void *: a void pointer pointing to the to-be-added object
   output:
-    int : 0 indicates success, otherwise unsuccess
+    int : 1 indicates success, 0 for unsuccess
 */
 int queue_enqueue(struct queue_entity * ptr_queue_entity, void * new_data);
 

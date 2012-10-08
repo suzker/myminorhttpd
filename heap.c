@@ -14,13 +14,13 @@ int heap_push(struct heap_entity * heap_ptr_entity, struct heap_data * new_data,
         struct heap_data **_tmp = realloc(heap_ptr_entity->_heap_array_, ((heap_ptr_entity->_heap_num_allocated_)*sizeof(struct heap_data *)));
         if (!_tmp){
             printf("[ERR] Couldn't re-allocate memory for the heap, exiting... \n");
-            return (-1);
+            return (0);
         }
         heap_ptr_entity->_heap_array_ = _tmp;
     }
     (heap_ptr_entity->_heap_array_)[heap_ptr_entity->_heap_num_element_++] = new_data;
     _heapify_bottom_up_(heap_ptr_entity, ptCmpFunc);
-    return 0;
+    return 1;
 }
 
 struct heap_data * heap_pop(struct heap_entity * heap_ptr_entity, int (*ptCmpFunc)(long *a, long *b)){
