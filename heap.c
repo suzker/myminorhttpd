@@ -80,8 +80,8 @@ void heap_free(struct heap_entity * heap_ptr_entity){
     heap_ptr_entity->_heap_num_allocated_ = 0;
 }
 
-int heap_is_empty(){
-    if (_heap_num_element_ == 0){
+int heap_is_empty(struct heap_entity * heap_ptr_entity){
+    if (heap_ptr_entity->_heap_num_element_ == 0){
         return 1;
     }else{
         return 0;
