@@ -7,6 +7,7 @@
 
 #include "queue.h"
 #include "heap.h"
+#include "utility.h"
 
 #define MODE_FIFO 0
 #define MODE_SJF 1
