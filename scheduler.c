@@ -34,9 +34,10 @@ struct scheduler_job scheduler_create_job(void * job_data, long len){
     return _new_job;
 }
 
-int scheduler_handle_new_job(struct scheduler_job * new_job){
+int scheduler_add_job(struct scheduler_job * new_job){
     int _status;
     int _isempty; // if it's empty before adding the new job, will signal the emit thread after new job added
+    struct heap_data * new_heap_data;
     pthread_mutex_lock(&scheduler_joblist_mutex);
      switch (arg_schedule_mode){
         case MODE_FIFO:
@@ -45,10 +46,10 @@ int scheduler_handle_new_job(struct scheduler_job * new_job){
             break;
         case MODE_SJF:
             _isempty = heap_is_empty(&scheduler_heap);
-            struct heap_data new_heap_data;
-            new_heap_data.data = new_job;
-            new_heap_data.cmp = new_job->len;
-            _status = heap_push(&scheduler_heap, &new_heap_data, cmp_func);
+            new_heap_data = (struct heap_data *)malloc(sizeof(struct heap_data));
+            new_heap_data->data = new_job;
+            new_heap_data->cmp = new_job->len;
+            _status = heap_push(&scheduler_heap, new_heap_data, cmp_func);
             break;
         default:
             _isempty = queue_is_empty(&scheduler_queue);
@@ -72,6 +73,9 @@ void* scheduler_emit_job_thread_routin(void* arg){
             _next_job_ptr = scheduler_pop();
             if (_next_job_ptr){
                 // TODO: time to call the "tpool_assign_job"
+                // *** for test only!
+                printf("job data popped out: %d \n",*(int *)(_next_job_ptr->job_data));
+                // *** end of test seg
             }
         } else { // if the joblist is empty, block the scheduler
             pthread_cond_wait(&scheduler_nonempty_cond, &scheduler_joblist_mutex);
@@ -112,6 +116,7 @@ int scheduler_is_joblist_empty(){
             break;
     }
 }
+
 
 struct scheduler_job * scheduler_pop(){
     struct scheduler_job * _popped_out;

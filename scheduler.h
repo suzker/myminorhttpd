@@ -1,3 +1,8 @@
+/**
+ A Scheduler implementation with SJF/FIFO strategy
+ Author: Zhiliang Su
+ Revised: 14 Oct 2012
+*/
 #ifndef _HEADER_SCHEDULER_
 #define _HEADER_SCHEDULER_
 
@@ -36,9 +41,10 @@ void scheduler_init();
 struct scheduler_job scheduler_create_job(void *, long);
 
 /**
- function: scheduler_handle_new_job
+ function: scheduler_add_job
+  to add a job to the job list, this will send a signal to the 
 */
-int scheduler_handle_new_job(struct scheduler_job * new_job);
+int scheduler_add_job(struct scheduler_job * new_job);
 
 /**
  function: cmp_func

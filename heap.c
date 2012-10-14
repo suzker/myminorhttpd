@@ -28,7 +28,7 @@ struct heap_data * heap_pop(struct heap_entity * heap_ptr_entity, int (*ptCmpFun
     struct heap_data * tmp = (heap_ptr_entity->_heap_array_)[0];
     // fill the hole left on root with the right-bottom-most element
     (heap_ptr_entity->_heap_array_)[0] = (heap_ptr_entity-> _heap_array_)[--(heap_ptr_entity->_heap_num_element_)];
-    (heap_ptr_entity->_heap_array_)[heap_ptr_entity->_heap_num_element_] = NULL;   
+    (heap_ptr_entity->_heap_array_)[heap_ptr_entity->_heap_num_element_] = NULL;
     _heapify_top_down_(heap_ptr_entity, ptCmpFunc);
     return tmp;
 }
@@ -56,6 +56,7 @@ void _heapify_top_down_(struct heap_entity * heap_ptr_entity, int (*ptCmpFunc)(l
             i = maxc;
         }
     }
+    int k;
 }
 
 void _heapify_bottom_up_(struct heap_entity * heap_ptr_entity, int (*ptCmpFunc)(long *a, long *b)){
