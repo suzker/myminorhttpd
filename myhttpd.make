@@ -9,8 +9,11 @@ myhttpd.o: myhttpd.c
 utility.o: utility.c
 	gcc -c utility.c -o utility.o
 
-scheduler.o: scheduler.c heap.o queue.o
+scheduler.o: scheduler.c
 	gcc -c scheduler.c -o scheduler.o
+
+tpool.o: tpool.c
+	gcc -c tpool.c -o tpool.o
 
 heap.o: heap.c
 	gcc -c heap.c -o heap.o

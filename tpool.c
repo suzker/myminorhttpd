@@ -33,6 +33,10 @@ void tpool_init(void *(*func)(struct scheduler_job *)){
         *self_id = i;
         pthread_create(&(__tpool_t_workers[i]), NULL, tpool_thread_worker, self_id);
     }
+
+    // sleep for queueing delay
+    sleep(arg_queue_time);
+    
     // start the assigner thread
     pthread_create(&__tpool_t_assigner, NULL, tpool_thread_assigner, NULL);
 }
@@ -46,7 +50,7 @@ void * tpool_thread_worker(void * arg){
         the_job = __tpool_job_slot[*my_id];
         pthread_mutex_unlock(&__tpool_mutex_job_slot);
         tpool_working_instruction(the_job);
-        // TODO assume that the calling working_instruction returns means finished
+        // assume that the return of the "working_instruction" means finished
         tpool_recycle_idle_t(my_id);
     }
 }
