@@ -18,9 +18,6 @@
 #define MODE_FIFO 0
 #define MODE_SJF 1
 
-// extern vars that needs to be reference by other source later. Definitions in scheduler.c
-extern sem_t scheduler_sem_full, scheduler_sem_empty;
-
 // the job object
 struct scheduler_job{
     void* job_data;
@@ -36,7 +33,7 @@ void scheduler_init();
 
 /**
  function: scheduler_create_job
-  to create a scheduelr_job object for scheduler
+  to create a struct scheduler_job object for scheduler
   input:
     void * : pointer to the object related to the job.
     long len: job length measurement
@@ -51,6 +48,15 @@ struct scheduler_job scheduler_create_job(void *, long);
   implemented with the "2 semaphores + 1 mutex" solution for the producer-consumer problem. consider this one as the *ONLY* producer.
 */
 int scheduler_add_job(struct scheduler_job * new_job);
+
+/**
+ function: scheduler_get_job
+  to get a job from the job list
+  implemented in the semaphore + mutex way. this is the consumer
+  output:
+   scheduler_job* : the pointer to the popped out job
+*/
+struct scheduler_job * scheduler_get_job();
 
 /**
  function: cmp_func

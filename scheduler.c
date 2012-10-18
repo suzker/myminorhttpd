@@ -6,7 +6,6 @@ struct heap_entity scheduler_heap;
 
 pthread_mutex_t scheduler_joblist_mutex;
 pthread_t scheduler_thread;
-//def of external variable
 sem_t scheduler_sem_full, scheduler_sem_empty;
 
 void scheduler_init(){
@@ -57,6 +56,16 @@ int scheduler_add_job(struct scheduler_job * new_job){
     pthread_mutex_unlock(&scheduler_joblist_mutex);
     sem_post(&scheduler_sem_full);
     return _status;
+}
+
+struct scheduler_job * scheduler_get_job(){
+    struct scheduler_job * __next_job = NULL;
+    sem_wait(&scheduler_sem_full);
+    pthread_mutex_lock(&scheduler_joblist_mutex);
+    __next_job = scheduler_pop();
+    pthread_mutex_unlock(&scheduler_joblist_mutex);
+    sem_post(&scheduler_sem_empty);
+    return __next_job;
 }
 
 int cmp_func(long *a, long *b){
