@@ -1,7 +1,7 @@
 /**
  A Scheduler implementation with SJF/FIFO strategy
  Author: Zhiliang Su
- Revised: 14 Oct 2012
+ Revised: 18 Oct, 2012
 */
 #ifndef _HEADER_SCHEDULER_
 #define _HEADER_SCHEDULER_
@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #include "queue.h"
 #include "heap.h"
@@ -17,6 +18,10 @@
 #define MODE_FIFO 0
 #define MODE_SJF 1
 
+// extern vars that needs to be reference by other source later. Definitions in scheduler.c
+extern sem_t scheduler_sem_full, scheduler_sem_empty;
+
+// the job object
 struct scheduler_job{
     void* job_data;
     long len;
@@ -25,7 +30,7 @@ struct scheduler_job{
 /**
  function: scheduler_init
   to initialize a schedular including creating a queue/heap depending on the scheduler type, defining the maximum connections and etc.
-  ,init mutex and cond to ensure thread safety. Also will call to start a new thread to emit new jobs to worker threads from thread pool.
+  init mutex and cond to ensure thread safety. Also will call to start a new thread to emit new jobs to worker threads from thread pool.
 */
 void scheduler_init();
 
@@ -42,7 +47,8 @@ struct scheduler_job scheduler_create_job(void *, long);
 
 /**
  function: scheduler_add_job
-  to add a job to the job list, this will send a signal to the 
+  to add a job to the job list
+  implemented with the "2 semaphores + 1 mutex" solution for the producer-consumer problem. consider this one as the *ONLY* producer.
 */
 int scheduler_add_job(struct scheduler_job * new_job);
 
@@ -51,14 +57,6 @@ int scheduler_add_job(struct scheduler_job * new_job);
   to customize the comparasion between two inputs
 */
 int cmp_func(long*, long*);
-
-/**
- function: scheduler_emit_job_thread_routin
-  a thread starting routin to emit jobs in the job list container
-  while the container is empty, the thread will be put to halt waiting for the pthread_cond_t signal
-  eventually, it will call a func of the threadpool to access the thread pool to attain a worker thread
-*/
-void* scheduler_emit_job_thread_routin(void *);
 
 /**
  function: scheduler_destroy

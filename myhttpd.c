@@ -37,5 +37,7 @@ int main(int argc, char *argv[]){
     // the inserted jobs should be popped out automatically
     printf("waiting for output to be finished, sleep for 3 secs\n");
     sleep(3);
+
+    scheduler_destroy();
     return 0;
 }

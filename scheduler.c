@@ -5,12 +5,14 @@ struct queue_entity scheduler_queue;
 struct heap_entity scheduler_heap;
 
 pthread_mutex_t scheduler_joblist_mutex;
-pthread_cond_t scheduler_nonempty_cond;
 pthread_t scheduler_thread;
+//def of external variable
+sem_t scheduler_sem_full, scheduler_sem_empty;
 
 void scheduler_init(){
     pthread_mutex_init(&scheduler_joblist_mutex, NULL);
-    pthread_cond_init(&scheduler_nonempty_cond, NULL);
+    sem_init(&scheduler_sem_full, 0, 0);
+    sem_init(&scheduler_sem_empty, 0, scheduler_max_wait);
 
     switch (arg_schedule_mode){
         case MODE_FIFO:
@@ -23,8 +25,7 @@ void scheduler_init(){
             queue_init(&scheduler_queue, scheduler_max_wait);
             break;
     }
-    // start the job emitting thread
-    pthread_create(&scheduler_thread, NULL, scheduler_emit_job_thread_routin, NULL);
+    // TODO start a standalone thread here for scheduler
 }
 
 struct scheduler_job scheduler_create_job(void * job_data, long len){
@@ -36,52 +37,26 @@ struct scheduler_job scheduler_create_job(void * job_data, long len){
 
 int scheduler_add_job(struct scheduler_job * new_job){
     int _status;
-    int _isempty; // if it's empty before adding the new job, will signal the emit thread after new job added
     struct heap_data * new_heap_data;
+    sem_wait(&scheduler_sem_empty);
     pthread_mutex_lock(&scheduler_joblist_mutex);
      switch (arg_schedule_mode){
         case MODE_FIFO:
-            _isempty = queue_is_empty(&scheduler_queue);
             _status =  queue_enqueue(&scheduler_queue , new_job);
             break;
         case MODE_SJF:
-            _isempty = heap_is_empty(&scheduler_heap);
             new_heap_data = (struct heap_data *)malloc(sizeof(struct heap_data));
             new_heap_data->data = new_job;
             new_heap_data->cmp = new_job->len;
             _status = heap_push(&scheduler_heap, new_heap_data, cmp_func);
             break;
         default:
-            _isempty = queue_is_empty(&scheduler_queue);
             _status = queue_enqueue(&scheduler_queue , new_job);
             break;
     }
-
-    if (_status && _isempty){
-        pthread_cond_signal(&scheduler_nonempty_cond);
-    }
-
     pthread_mutex_unlock(&scheduler_joblist_mutex);
+    sem_post(&scheduler_sem_full);
     return _status;
-}
-
-void* scheduler_emit_job_thread_routin(void* arg){
-    struct scheduler_job * _next_job_ptr;
-    while (1){
-        pthread_mutex_lock(&scheduler_joblist_mutex);
-        if (!scheduler_is_joblist_empty()){
-            _next_job_ptr = scheduler_pop();
-            if (_next_job_ptr){
-                // TODO: time to call the "tpool_assign_job"
-                // *** for test only!
-                printf("job data popped out: %d \n",*(int *)(_next_job_ptr->job_data));
-                // *** end of test seg
-            }
-        } else { // if the joblist is empty, block the scheduler
-            pthread_cond_wait(&scheduler_nonempty_cond, &scheduler_joblist_mutex);
-        }
-        pthread_mutex_unlock(&scheduler_joblist_mutex);
-    }
 }
 
 int cmp_func(long *a, long *b){
@@ -101,6 +76,10 @@ void scheduler_destroy(){
             queue_free(&scheduler_queue);
             break;
     }
+    // pthread realted objects
+    pthread_mutex_destroy(&scheduler_joblist_mutex);
+    sem_destroy(&scheduler_sem_full);
+    sem_destroy(&scheduler_sem_empty);
 }
 
 int scheduler_is_joblist_empty(){

@@ -56,7 +56,6 @@ void _heapify_top_down_(struct heap_entity * heap_ptr_entity, int (*ptCmpFunc)(l
             i = maxc;
         }
     }
-    int k;
 }
 
 void _heapify_bottom_up_(struct heap_entity * heap_ptr_entity, int (*ptCmpFunc)(long *a, long *b)){
