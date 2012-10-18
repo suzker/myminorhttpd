@@ -24,7 +24,6 @@ void scheduler_init(){
             queue_init(&scheduler_queue, scheduler_max_wait);
             break;
     }
-    // TODO start a standalone thread here for scheduler
 }
 
 struct scheduler_job scheduler_create_job(void * job_data, long len){
