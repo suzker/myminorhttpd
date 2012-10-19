@@ -49,7 +49,9 @@ void * tpool_thread_worker(void * arg){
         pthread_cond_wait(&(__tpool_cond_workers[*my_id]), &__tpool_mutex_job_slot);
         the_job = __tpool_job_slot[*my_id];
         pthread_mutex_unlock(&__tpool_mutex_job_slot);
-        tpool_working_instruction(the_job);
+        if (the_job){
+            tpool_working_instruction(the_job);
+        }
         // assume that the return of the "working_instruction" means finished
         tpool_recycle_idle_t(my_id);
     }
@@ -60,24 +62,28 @@ void * tpool_thread_assigner(void * arg){
     int * __next_worker_id;
     while (1){
         sem_wait(&__tpool_sem_q_full);
-        pthread_mutex_lock(&__tpool_mutex_idle_t);
         __next_job = scheduler_get_job();
+        pthread_mutex_lock(&__tpool_mutex_idle_t);
         __next_worker_id = queue_dequeue(&__tpool_q_idle_t);
         pthread_mutex_unlock(&__tpool_mutex_idle_t);
-        sem_post(&__tpool_sem_q_empty);
+
         if (__next_job && __next_worker_id){
             pthread_mutex_lock(&__tpool_mutex_job_slot);
             __tpool_job_slot[*__next_worker_id] = __next_job;
             pthread_mutex_unlock(&__tpool_mutex_job_slot);
-            // wake up the dedicated worker
-            pthread_cond_signal(&(__tpool_cond_workers[*__next_worker_id]));
         } else {
             printf("[ERR] Invalid job or worker thread, skipped. \n");
         }
+        // wake up the dedicated worker
+        pthread_cond_signal(&(__tpool_cond_workers[*__next_worker_id]));
+        sem_post(&__tpool_sem_q_empty);
     }
 }
 
 int tpool_recycle_idle_t(int * idx_idle_t){
+    pthread_mutex_lock(&__tpool_mutex_job_slot);
+    __tpool_job_slot[*idx_idle_t] = NULL;
+    pthread_mutex_unlock(&__tpool_mutex_job_slot);
     sem_wait(&__tpool_sem_q_empty);
     pthread_mutex_lock(&__tpool_mutex_idle_t);
     //safe critical section
