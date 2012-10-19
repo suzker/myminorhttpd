@@ -34,9 +34,6 @@ void tpool_init(void *(*func)(struct scheduler_job *)){
         pthread_create(&(__tpool_t_workers[i]), NULL, tpool_thread_worker, self_id);
     }
 
-    // sleep for queueing delay
-    sleep(arg_queue_time);
-    
     // start the assigner thread
     pthread_create(&__tpool_t_assigner, NULL, tpool_thread_assigner, NULL);
 }
@@ -60,6 +57,10 @@ void * tpool_thread_worker(void * arg){
 void * tpool_thread_assigner(void * arg){
     struct scheduler_job * __next_job;
     int * __next_worker_id;
+
+    // sleep for queueing delay
+    sleep(arg_queue_time);
+ 
     while (1){
         sem_wait(&__tpool_sem_q_full);
         __next_job = scheduler_get_job();
