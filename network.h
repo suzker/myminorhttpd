@@ -50,6 +50,17 @@ char * nw_read_from_remote(int *remote_fd);
 void nw_write_to_remote(int *remote_fd, char *content);
 
 /**
+ function: nw_close_conn
+*/
+void nw_close_conn(int *);
+
+/**
+ function: nw_close_serv
+  to close the server socket
+*/
+void nw_close_serv();
+
+/**
  function: nw_destroy
   to stop all socket and free all used variables
 */

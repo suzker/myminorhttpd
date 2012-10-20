@@ -1,7 +1,7 @@
 #include "network.h"
 // __SOMAXCONN a desired size of backlog on listening, but might shrink to actual limit of a specific OS.
 const int __SOMAXCONN = 128;
-const int __buff_size = 512;
+const int __buff_size = 1024;
 int __socket_fd, __portnum;
 socklen_t __len_remote;
 struct sockaddr_in __serv_addr, __remote_addr;
@@ -33,34 +33,33 @@ int * nw_accept_incoming(){
     if (*__remote_fd < 0){
         perror("Error accepting remote connections, exiting...\n");
     }
+    return __remote_fd;
 }
 
 char * nw_read_from_remote(int *remote_fd){
-    char __buff[__buff_size];
-    char * __output;
+    char *__buff;
+    __buff = (char*)malloc(__buff_size*sizeof(char));
     // clear buffer
     bzero(__buff, __buff_size);
     int count = 1;
     int n = 0;
     n = read(*remote_fd, __buff, (__buff_size - 1));
     if (n<1) { perror("Error reading stream, exiting...\n");}
-
-    // start reading into an output
-    while(n > 0){
-        // expand the output array
-        __output = (char *)realloc(__output, count * __buff_size * sizeof(char));
-        strcat(__output, __buff);
-        bzero(__buff, __buff_size);
-        n = read(*remote_fd, __buff, (__buff_size - 1));
-    }
-
-    return __output;
+    return __buff;
 }
 
 void nw_write_to_remote(int *remote_fd, char *content){
     int n = 0;
     n = write(*remote_fd, content, sizeof(content)/sizeof(char));
     if (n < 0) {perror("Error writing responds to the remote connection, exiting...\n");}
+}
+
+void nw_close_conn(int *remote_fd){
+    close(*remote_fd);
+}
+
+void nw_close_serv(){
+    close(__socket_fd);
 }
 
 void nw_destroy(){
