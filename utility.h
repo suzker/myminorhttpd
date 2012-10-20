@@ -56,4 +56,11 @@ int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, c
 */
 void _int_mon2str_(int * monint, char monstr[]);
 
+/**
+ function: throw_error(const char *)
+  to display a critical error msg and exit
+   input:
+        const char * : the error msg to display
+*/
+void throw_error(const char *)
 #endif
