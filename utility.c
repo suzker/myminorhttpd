@@ -138,5 +138,5 @@ void _int_mon2str_(int * monint, char monstr[]){
 
 void throw_error(const char * msg){
     perror(msg);
-    exit(1);
+    //exit(1);
 }
