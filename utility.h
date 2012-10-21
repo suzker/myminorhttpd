@@ -57,10 +57,32 @@ int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, c
 void _int_mon2str_(int * monint, char monstr[]);
 
 /**
- function: throw_error(const char *)
-  to display a critical error msg and exit
+ function: util_get_req_len
+  to get the request length according to the file the request asking for.
    input:
-        const char * : the error msg to display
+        char *: the requesting path
+   output:
+        long : the length
 */
-void throw_error(const char *)
+long util_get_req_len(char *);
+
+/**
+ function: util_get_response(char *)
+  to get an appropriate response for the input path (dirctory or file or root)
+   input:
+        char * : the requesting path
+   output:
+        char * : the content;
+*/
+char * util_get_response(char *);
+
+/**
+ function: get_response_type(char *)
+  given the input path (dirctory, file or root), to see if it's exist or not and and return the appropriate type (404, index.html, .flist, the_page).
+    input:
+         char * : the requesting path
+    output:
+         char * : the content
+*/
+char * get_response_type(char *);
 #endif

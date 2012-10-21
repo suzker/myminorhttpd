@@ -1,5 +1,9 @@
 #include "utility.h"
 
+const int RESP_TYPE_404 = 0;
+const int RESP_TYPE_FLIST = 1;
+const int RESP_TYPE_EXACT = 2;
+
 int arg_parser(int argc, char * argv[]){
    init_arg();
    int i;
@@ -136,7 +140,14 @@ void _int_mon2str_(int * monint, char monstr[]){
    return;
 }
 
-void throw_error(const char * msg){
-    perror(msg);
-    //exit(1);
+long util_get_req_len(char * req_path){
+    // TODO TBA
+}
+
+char * util_get_response(char * req_path){
+    // TODO TBA
+}
+
+char * get_response_type(char * req_path){
+    // TODO TBA
 }
