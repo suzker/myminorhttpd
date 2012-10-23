@@ -4,18 +4,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-//***************************
-// variables - arguments
-//***************************
-int arg_debug_mode;     //  to enable single thread non-daemond mode (-d)
-int arg_usage_sum;      //  to print usage summary in the end (-h)
-char arg_log_file[1000];     //  path to store log file (-l)
-int arg_listen_port;     //  port to bind (-p)
-char arg_root_folder[1000];  //  folder path of the root (-r)
-int arg_queue_time;      //  queing delay, in seconds (-t)
-int arg_thread_num;      //  number of threads (-n)
-int arg_schedule_mode;  //  scheduling mode, true for SJF, false for FIFO (-s)
+extern int arg_debug_mode;     //  to enable single thread non-daemond mode (-d)
+extern int arg_usage_sum;      //  to print usage summary in the end (-h)
+extern char arg_log_file[1000];     //  path to store log file (-l)
+extern int arg_listen_port;     //  port to bind (-p)
+extern char arg_root_folder[1000];  //  folder path of the root (-r)
+extern int arg_queue_time;      //  queing delay, in seconds (-t)
+extern int arg_thread_num;      //  number of threads (-n)
+extern int arg_schedule_mode;  //  scheduling mode, true for SJF, false for FIFO (-s)
+
+enum RESP_TYPE{
+    FRBID,
+    FLIST,
+    EXACT,
+    DFIDX,
+    INVLD
+};
+
 
 /**
  function: arg_parser
@@ -52,9 +61,8 @@ int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, c
   to convert the month into string
   input:
     int *: month in integer
-    cahr [] : char array to store result
 */
-void _int_mon2str_(int * monint, char monstr[]);
+char* _int_mon2str_(int * monint);
 
 /**
  function: util_get_req_len
@@ -82,7 +90,13 @@ char * util_get_response(char *);
     input:
          char * : the requesting path
     output:
-         char * : the content
+         enum RESP_TYPE : the type
 */
-char * get_response_type(char *);
+enum RESP_TYPE get_response_type(char *);
+
+/**
+ function: print_help()
+  RT
+*/
+void print_help();
 #endif

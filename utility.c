@@ -1,8 +1,15 @@
 #include "utility.h"
+const char * ENTITY_BODY_404 = "Err 404: The Content Requested Not Found. (and everybody hates me... T_T)\n";
+const char * ENTITY_BODY_403 = "Err 403: Permission Denied on The Content Requested.\n";
 
-const int RESP_TYPE_404 = 0;
-const int RESP_TYPE_FLIST = 1;
-const int RESP_TYPE_EXACT = 2;
+int arg_debug_mode;
+int arg_usage_sum;
+char arg_log_file[1000];
+int arg_listen_port;
+char arg_root_folder[1000];
+int arg_queue_time;
+int arg_thread_num;
+int arg_schedule_mode;
 
 int arg_parser(int argc, char * argv[]){
    init_arg();
@@ -88,66 +95,68 @@ int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, c
     struct tm *ptm_q, *ptm_e;
     ptm_q = gmtime ( time_queued );
     ptm_e = gmtime ( time_exec );
-    char monstr_q[5], monstr_e[5];
-    _int_mon2str_(&(ptm_q->tm_mon), monstr_q);
-    _int_mon2str_(&(ptm_e->tm_mon), monstr_e);
+    char *monstr_q, *monstr_e;
+    monstr_q = _int_mon2str_(&(ptm_q->tm_mon));
+    monstr_e = _int_mon2str_(&(ptm_e->tm_mon));
     fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %d", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_e->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, *status, *response_length);
     fclose(pFile);
 }
 
-void _int_mon2str_(int * monint, char monstr[]){
-   switch (*monint){
-       case 0:
-            strcpy(monstr, "Jan");
+char* _int_mon2str_(int * monint){
+    char * mon_set[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    return mon_set[*monint];
+}    
+
+long util_get_req_len(char * path){
+    char * abs_path;
+    switch(get_response_type(path)){
+        case INVLD:
+            return -1;
             break;
-       case 1:
-            strcpy(monstr, "Feb");
+        case FRBID:
+            return 1; 
             break;
-       case 2:
-            strcpy(monstr, "Mar");
-            break;
-       case 3:
-            strcpy(monstr, "Apr");
-            break;
-       case 4:
-            strcpy(monstr, "May");
-            break;
-       case 5:
-            strcpy(monstr, "Jun");
-            break;
-       case 6:
-            strcpy(monstr, "Jul");
-            break;
-       case 7:
-            strcpy(monstr, "Aug");
-            break;
-       case 8:
-            strcpy(monstr, "Sep");
-            break;
-       case 9:
-            strcpy(monstr, "Oct");
-            break;
-       case 10:
-            strcpy(monstr, "Nov");
-            break;
-       case 11:
-            strcpy(monstr, "Dec");
-            break;
-       default:
-            strcpy(monstr, "n/a");
-            break;
-   } 
-   return;
+    }
+
+    return 0;
 }
 
-long util_get_req_len(char * req_path){
+char * util_get_response(char * path){
     // TODO TBA
 }
 
-char * util_get_response(char * req_path){
-    // TODO TBA
-}
+enum RESP_TYPE get_response_type(char * path){
+    char * abs_path;
+    char * idx_path;
+    abs_path = (char *)malloc((strlen(arg_root_folder)+strlen(path))*sizeof(char));
+    idx_path = (char *)malloc((strlen(path)+15)*sizeof(char));
+    strcpy(abs_path, arg_root_folder);
+    strcat(abs_path, path);
+    strcpy(idx_path, path);
+    strcat(idx_path, "index.html");
 
-char * get_response_type(char * req_path){
-    // TODO TBA
+    printf("input path: %s;\nabs_path: %s;\nidx_path: %s;\n", path, abs_path, idx_path);
+
+    struct stat file_stat;
+    if (stat(abs_path, &file_stat) < 0){
+        return INVLD;
+    }
+
+    if (!(file_stat.st_mode & S_IROTH)){
+        return FRBID;
+    }   
+
+    if (S_ISDIR(file_stat.st_mode)){
+        if (get_response_type(idx_path) == EXACT){
+            return DFIDX;
+        } else {
+            return FLIST;
+        }
+    }
+
+    if (S_ISREG(file_stat.st_mode)){
+        return EXACT;
+    }
+
+    return FRBID;
 }
