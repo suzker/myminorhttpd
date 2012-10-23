@@ -65,4 +65,10 @@ void nw_close_serv();
   to stop all socket and free all used variables
 */
 void nw_destroy();
+
+/**
+ function: nw_get_remote_addr
+  return the remote_addr that are being deal with 
+*/
+char * nw_get_remote_addr();
 #endif
