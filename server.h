@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "network.h"
 #include "utility.h"
 #include "scheduler.h"
@@ -20,8 +21,11 @@ struct serv_request{
     int * remote_fd;
     int mode;
     char * path;
-    int protocal;
-}
+    float protocol;
+    time_t * recv_time;
+    char * quot_req;
+    char * remote_ip;
+};
 
 /**
  function: serv_init
@@ -44,7 +48,7 @@ void * serv_t_server(void *);
    output:
         1 for valid and 0 for invalid
 */
-int serv_is_http_request(char *, struct serv_request *);
+int serv_parse_http_request(char *, struct serv_request *);
 
 /**
  function: serv_reply_to_remote
