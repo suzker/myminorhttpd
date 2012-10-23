@@ -65,3 +65,7 @@ void nw_close_serv(){
 void nw_destroy(){
     // TODO to be added...    
 }
+
+struct sockaddr_in nw_get_remote_addr(){
+    return __remote_addr;
+}
