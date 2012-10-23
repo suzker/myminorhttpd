@@ -50,7 +50,7 @@ char * nw_read_from_remote(int *remote_fd){
 
 void nw_write_to_remote(int *remote_fd, char *content){
     int n = 0;
-    n = write(*remote_fd, content, sizeof(content)/sizeof(char));
+    n = write(*remote_fd, content, strlen(content));
     if (n < 0) {perror("Error writing responds to the remote connection, exiting...\n");}
 }
 
