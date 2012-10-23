@@ -66,6 +66,6 @@ void nw_destroy(){
     // TODO to be added...    
 }
 
-struct sockaddr_in nw_get_remote_addr(){
-    return __remote_addr;
+char * nw_get_remote_addr(){
+    return (char *)inet_ntoa(__remote_addr.sin_addr);
 }
