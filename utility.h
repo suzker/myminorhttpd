@@ -25,7 +25,6 @@ enum RESP_TYPE{
     INVLD
 };
 
-
 /**
  function: arg_parser
   to parse the input arguments and assign related values to the static variables.
@@ -52,9 +51,19 @@ void init_arg();
     time_t * : the time being assign to an exec thread
     char * : the quote of first line from the request
     int * : the status code
-    int * : the response length in byte
+    long * : the response length in byte
 */
-int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int *status, int *response_length);
+int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int status, long response_length);
+
+/**
+ function _get_current_time_
+*/
+time_t * _get_current_time_();
+
+/**
+ function _get_time_str_
+*/
+char * _get_time_str_(time_t *);
 
 /**
  function: _ini_mon2str_ (private)
@@ -62,7 +71,13 @@ int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, c
   input:
     int *: month in integer
 */
-char* _int_mon2str_(int * monint);
+char * _int_mon2str_(int * monint);
+
+/**
+ function: _int_weekdays_
+  to convert the day into weekdays string
+*/
+char * _int_weekdays_(int * dayint);
 
 /**
  function: util_get_req_len
@@ -77,12 +92,14 @@ long util_get_req_len(char *);
 /**
  function: util_get_response(char *)
   to get an appropriate response for the input path (dirctory or file or root)
+  *this function is also responsible for constructing appropriate HTTP response headers.
    input:
         char * : the requesting path
+        char * : the pointer to the memory to store the response contents
    output:
-        char * : the content;
+        int : the status code;
 */
-char * util_get_response(char *);
+int util_get_response(char *, int, char *);
 
 /**
  function: get_response_type(char *)
@@ -99,4 +116,46 @@ enum RESP_TYPE get_response_type(char *);
   RT
 */
 void print_help();
+
+/**
+ function : _get_flist_
+  get file list given the url to a dirctory
+*/
+char * _get_flist_(char *);
+
+/**
+ function: _get_file_len
+  given a file path return the length of the file
+*/
+long _get_file_len(char *);
+
+/**
+ function: _get_abs_path_(char *)
+*/
+char * _get_abs_path_(char * path);
+
+/**
+ function: _get_idx_path_ (char *)
+*/
+char * _get_idx_path_ (char* abs_path);
+
+/**
+ function: _get_file_content_ (char *)
+*/
+char * _get_file_content_(char * file_path);
+
+/**
+ function: _get_resp_header_(enum RESP_TYPE, char *)
+*/
+int _get_resp_header_(enum RESP_TYPE, char * header_str, char * abs_path, long content_len);
+
+/**
+ function: _get_file_timestamp_(char *)
+*/
+time_t * _get_file_timestamp_(char * file_path);
+
+/**
+ function: _get_first_line_(char *)
+*/
+char * _get_first_line_(char *);
 #endif

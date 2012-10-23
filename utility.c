@@ -1,6 +1,7 @@
 #include "utility.h"
-const char * ENTITY_BODY_404 = "Err 404: The Content Requested Not Found. (and everybody hates me... T_T)\n";
-const char * ENTITY_BODY_403 = "Err 403: Permission Denied on The Content Requested.\n";
+char * ENTITY_BODY_404 = "Err 404: The Content Requested Not Found. (and everybody hates me... T_T)\n";
+char * ENTITY_BODY_403 = "Err 403: Permission Denied on The Content Requested.\n";
+const char * SERVER_IDTIFIER = "MINOR-HTTPD BUFFALO";
 
 int arg_debug_mode;
 int arg_usage_sum;
@@ -10,6 +11,9 @@ char arg_root_folder[1000];
 int arg_queue_time;
 int arg_thread_num;
 int arg_schedule_mode;
+
+const int MODE_GET = 1;
+const int MODE_HEAD = 2;
 
 int arg_parser(int argc, char * argv[]){
    init_arg();
@@ -82,7 +86,7 @@ void init_arg(){
     arg_schedule_mode = 0;
 }
 
-int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int *status, int *response_length){
+int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int status, long response_length){
     if (!strcmp(arg_log_file, "N/A")){return 0;}
     FILE * pFile;
     if (pFile = fopen(arg_log_file, "r")){ 
@@ -98,7 +102,7 @@ int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, c
     char *monstr_q, *monstr_e;
     monstr_q = _int_mon2str_(&(ptm_q->tm_mon));
     monstr_e = _int_mon2str_(&(ptm_e->tm_mon));
-    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %d", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_e->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, *status, *response_length);
+    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_e->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, status, response_length);
     fclose(pFile);
 }
 
@@ -107,56 +111,262 @@ char* _int_mon2str_(int * monint){
     return mon_set[*monint];
 }    
 
-long util_get_req_len(char * path){
-    char * abs_path;
-    switch(get_response_type(path)){
-        case INVLD:
-            return -1;
-            break;
-        case FRBID:
-            return 1; 
-            break;
-    }
-
-    return 0;
+char * _int_weekdays_(int * dayint){
+    char * day_set[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+    return day_set[*dayint];
 }
 
-char * util_get_response(char * path){
-    // TODO TBA
+long util_get_req_len(char * path){
+    long len;
+    char * abs_path;
+    abs_path = _get_abs_path_(path);
+    char * idx_path;
+    idx_path = _get_idx_path_(abs_path);
+    switch(get_response_type(path)){
+        case INVLD:
+            len = strlen(ENTITY_BODY_404);
+            break;
+        case FRBID:
+            len = strlen(ENTITY_BODY_403);
+            break;
+        case FLIST:
+            len = strlen(_get_flist_(abs_path));
+            break;
+        case EXACT:
+            len = _get_file_len(abs_path);
+            break;
+        case DFIDX:
+            len = _get_file_len(idx_path);
+            break;
+        default:
+            len = 0;
+            break;
+    }
+    free(abs_path);
+    free(idx_path);
+    return len;
+}
+
+int util_get_response(char * path, int REQ_MODE, char * resp_str){
+    char * abs_path;
+    abs_path = _get_abs_path_(path);
+    char * idx_path;
+    idx_path = _get_idx_path_(abs_path);
+    enum RESP_TYPE t = get_response_type(path);
+    char * header_str;
+    header_str = (char *)malloc(1566*sizeof(char));
+    long content_len = util_get_req_len(path);
+    int status_code = _get_resp_header_(t, header_str, abs_path, content_len);
+    strcpy(resp_str, header_str);
+    if (REQ_MODE == MODE_GET){
+        switch(t){
+            case INVLD:
+                strcat(resp_str, ENTITY_BODY_404);
+                break;
+            case FRBID:
+                strcat(resp_str, ENTITY_BODY_403);
+                break;
+            case FLIST:
+                strcat(resp_str, _get_flist_(abs_path));
+                break;
+            case EXACT:
+                strcat(resp_str, _get_file_content_(abs_path));
+                break;
+            case DFIDX:
+                strcat(resp_str, _get_file_content_(idx_path));
+                break;
+            default:
+                strcat(resp_str, ENTITY_BODY_404);
+                break;
+            }
+     }
+     
+    free(abs_path);
+    free(idx_path);
+    free(header_str);
+    return status_code;
 }
 
 enum RESP_TYPE get_response_type(char * path){
     char * abs_path;
+    abs_path = _get_abs_path_(path);
     char * idx_path;
-    abs_path = (char *)malloc((strlen(arg_root_folder)+strlen(path))*sizeof(char));
     idx_path = (char *)malloc((strlen(path)+15)*sizeof(char));
-    strcpy(abs_path, arg_root_folder);
-    strcat(abs_path, path);
     strcpy(idx_path, path);
     strcat(idx_path, "index.html");
 
-    printf("input path: %s;\nabs_path: %s;\nidx_path: %s;\n", path, abs_path, idx_path);
-
     struct stat file_stat;
     if (stat(abs_path, &file_stat) < 0){
+        free(abs_path);
+        free(idx_path);
         return INVLD;
     }
+    free(abs_path);
 
     if (!(file_stat.st_mode & S_IROTH)){
+        free(idx_path);
         return FRBID;
-    }   
+    }
 
     if (S_ISDIR(file_stat.st_mode)){
         if (get_response_type(idx_path) == EXACT){
+            free(idx_path);
             return DFIDX;
         } else {
+            free(idx_path);
             return FLIST;
         }
     }
-
+    free(idx_path); 
     if (S_ISREG(file_stat.st_mode)){
         return EXACT;
     }
 
     return FRBID;
+}
+
+void print_help(){
+    // TODO tba
+}
+
+char * _get_flist_(char * dir_path){
+    FILE *fp;
+    char path[1035];
+    char * buff;
+    buff = (char *)malloc(65535*sizeof(char));
+    char command[1035];
+    sprintf(command, "/bin/ls %s -lt", dir_path);
+    fp = popen(command, "r");
+    if (fp == NULL){
+        perror("Error reading dirctory file list. I will suggest a retry.");
+    }
+
+    while (fgets(path, sizeof(path)-1, fp) != NULL) {
+        strcat(buff, path);
+    }
+    return buff;
+}
+
+long _get_file_len(char * file_path){
+    struct stat file_stat;
+    if (stat(file_path, &file_stat) < 0){
+        return -1;
+    }
+    return file_stat.st_size;
+}
+
+char * _get_abs_path_(char * rel_path){
+    char * abs_path;
+    abs_path = (char *)malloc((strlen(arg_root_folder)+strlen(rel_path))*sizeof(char));
+    strcpy(abs_path, arg_root_folder);
+    strcat(abs_path, rel_path);
+    return abs_path;
+}
+
+char * _get_idx_path_ (char * abs_path){
+    char * idx_path;
+    idx_path = (char * )malloc((strlen(abs_path)+strlen("index.html"))*sizeof(char));
+    strcpy(idx_path, abs_path);
+    strcat(idx_path, "index.html");
+    return idx_path;
+}
+
+char * _get_file_content_(char * file_path){
+    char * buffer = 0;
+    long length;
+    FILE * f = fopen (file_path, "rb");
+
+    if (f) {
+        fseek (f, 0, SEEK_END);
+        length = ftell (f);
+        fseek (f, 0, SEEK_SET);
+        buffer = malloc (length);
+        if (buffer) {
+            fread (buffer, 1, length, f);
+        }
+        fclose (f);
+    }
+
+    return buffer;
+}
+
+int _get_resp_header_(enum RESP_TYPE t, char * header_str, char * abs_path, long content_len){
+    int status_code;
+    char * current_time;
+    time_t * _tmp_t;
+    _tmp_t = _get_current_time_();
+    current_time = (char *)_get_time_str(_tmp_t);
+    char * last_mod_time;
+    switch (t){
+        case FRBID:
+            status_code = 403;
+            break;
+        case INVLD:
+            status_code = 404;
+            break;
+        case FLIST:
+            status_code = 200;
+            break;
+        case EXACT:
+            status_code = 200;
+            _tmp_t = _get_file_timestamp_(abs_path);
+            break;
+        case DFIDX:
+            status_code = 200;
+            _tmp_t = _get_file_timestamp_(abs_path);
+            break;
+        default:
+            status_code = 404;
+            break;
+    }
+
+    last_mod_time = _get_time_str_(_tmp_t);
+    sprintf(header_str, "HTTP/1.0 %d\r\n\tDate:%s\tServer:%s\tLast-Modified:%s\tContent-Type:text/html\tContent-Length:%ld\r\n", status_code,current_time,SERVER_IDTIFIER,last_mod_time,content_len);
+
+    free(_tmp_t);
+    free(current_time);
+    free(last_mod_time);
+    return status_code;
+}
+
+time_t * _get_current_time_(){
+    time_t * raw_t;
+    raw_t = (time_t *)malloc(sizeof(time_t));
+    time(raw_t);
+    return raw_t;
+}
+
+char * _get_time_str_(time_t * raw_t){
+    char * time_str;
+    time_str = (char *)malloc(128*sizeof(char));
+    struct tm * ptm;
+    ptm = gmtime(raw_t);
+    sprintf(time_str, "%s, %02d %s %04d %02d:%02d:%02d GMT", _int_weekdays_(&(ptm->tm_wday)), ptm->tm_mday, _int_mon2str_(&(ptm->tm_mon)), 1900+ptm->tm_year, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    free(ptm);
+    free(raw_t);
+    return time_str;
+}
+
+time_t * _get_file_timestamp_(char * file_path){
+    time_t * timestamp;
+    timestamp = (time_t*)malloc(sizeof(time_t));
+    struct stat file_stat;
+    if (stat(file_path, &file_stat) < 0){
+        return NULL;
+    }
+    *timestamp = file_stat.st_mtime;
+    return timestamp;
+}
+
+char * _get_first_line_(char * quote){
+    int i = 0;
+    while(i < strlen(quote)){
+       if (quote[i] == '\n')
+           break;
+       ++i;
+    }
+    char * sub;
+    sub = (char * )malloc((i+1)*sizeof(char));
+    memcpy(sub, quote, i);
+    return sub;
 }
