@@ -79,8 +79,8 @@ void init_arg(){
     arg_debug_mode = 0;
     arg_usage_sum = 0;
     strcpy(arg_log_file, "N/A");
-    arg_listen_port = 8080;
-    strcpy(arg_root_folder, "./www/");
+    arg_listen_port = 7717;
+    strcpy(arg_root_folder, "/home/zsu2/www/");
     arg_queue_time = 60;
     arg_thread_num = 1;
     arg_schedule_mode = 0;
@@ -180,7 +180,6 @@ int util_get_response(char * path, int REQ_MODE, char * resp_str){
                 break;
             }
      }
-     
     free(abs_path);
     free(idx_path);
     free(header_str);
@@ -319,11 +318,8 @@ int _get_resp_header_(enum RESP_TYPE t, char * header_str, char * abs_path, long
             status_code = 404;
             break;
     }
-
     last_mod_time = _get_time_str_(_tmp_t);
     sprintf(header_str, "HTTP/1.0 %d\r\n\tDate:%s\tServer:%s\tLast-Modified:%s\tContent-Type:text/html\tContent-Length:%ld\r\n", status_code,current_time,SERVER_IDTIFIER,last_mod_time,content_len);
-
-    free(_tmp_t);
     free(current_time);
     free(last_mod_time);
     return status_code;
@@ -342,8 +338,6 @@ char * _get_time_str_(time_t * raw_t){
     struct tm * ptm;
     ptm = gmtime(raw_t);
     sprintf(time_str, "%s, %02d %s %04d %02d:%02d:%02d GMT", _int_weekdays_(&(ptm->tm_wday)), ptm->tm_mday, _int_mon2str_(&(ptm->tm_mon)), 1900+ptm->tm_year, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
-    free(ptm);
-    free(raw_t);
     return time_str;
 }
 

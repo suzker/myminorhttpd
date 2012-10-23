@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 #include "network.h"
 #include "utility.h"
 #include "scheduler.h"

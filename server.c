@@ -6,12 +6,14 @@ const int PROT_HTTP = 1;
 const int PROT_HTTPS = 2;
 
 int serv_port;
+pthread_t __serv_thread;
 
 void serv_init(){
     serv_port = arg_listen_port;
     nw_listen_on_socket(serv_port);
     scheduler_init();
     tpool_init(serv_reply_to_remote);
+    pthread_create(&__serv_thread, NULL, serv_t_server, NULL);
 }
 
 void * serv_t_server(void * arg){
@@ -21,6 +23,7 @@ void * serv_t_server(void * arg){
     int valid;
     long req_len;
     struct scheduler_job * s_job;
+    printf("DB: server thread started!\n");
     while (1){
         req = (struct serv_request *)malloc(sizeof(struct serv_request));
         s_job = (struct scheduler_job *)malloc(sizeof(struct scheduler_job));
@@ -29,11 +32,13 @@ void * serv_t_server(void * arg){
         read_output = nw_read_from_remote(remote_fd);
         valid = serv_parse_http_request(read_output, req);
         if (valid != 0){
+            printf("DB: it's a valid request!\n");
             req->remote_fd = remote_fd;
             req->quot_req = _get_first_line_(read_output);
             req->recv_time = _get_current_time_();
             req->remote_ip = nw_get_remote_addr();
             req_len = util_get_req_len(req->path);
+            printf("DB: check point 3\n");
             *s_job = scheduler_create_job(req, req_len);
             // the add job will triger the semaphore that the consumer of the scheduler had been waiting for.
             scheduler_add_job(s_job);
@@ -87,6 +92,7 @@ int serv_parse_http_request(char * req, struct serv_request * s_req){
 }
 
 void * serv_reply_to_remote(struct scheduler_job * the_job){
+    printf("DB: working on the job! \n");
     int status_code;
     struct serv_request * my_resq = (struct serv_request *)the_job->job_data;
     long req_len = the_job->len;
@@ -96,11 +102,14 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
     } else {
         resp_content = (char *)malloc((1566)*sizeof(char));
     }
+    printf("DB: b4 util_get_response, everything allright!\n");
     status_code = util_get_response(my_resq->path, my_resq->mode, resp_content);
     nw_write_to_remote(my_resq->remote_fd, resp_content);
     time_t * exec_time = _get_current_time_();
     // call log to file and clean up
     log_to_file(my_resq->remote_ip, my_resq->recv_time, exec_time, my_resq->quot_req, status_code, req_len);
     free(resp_content);
+    nw_close_conn(my_resq->remote_fd);
     free(my_resq);
+    printf("DB: no prob closing conn.\n");
 }
