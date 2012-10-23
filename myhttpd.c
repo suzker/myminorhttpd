@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "utility.h"
 #include "scheduler.h"
+#include "server.h"
 
 int main(int argc, char *argv[]){
     if (!arg_parser(argc, argv)){
@@ -17,27 +18,8 @@ int main(int argc, char *argv[]){
         printf("number of threads: %d\n", arg_thread_num);
         printf("schedule mode: %d\n", arg_schedule_mode);
     }
-
-    // init scheduler
-    scheduler_init();
-
-    // insert jobs into the scheduler
-    int *k;
-    struct scheduler_job *job;
-    int i;
-    for (i=0; i<19; ++i){
-        k = (int *)malloc(sizeof(int));
-         *k = rand() % 30 + 1;
-         job = (struct scheduler_job *)malloc(sizeof(struct scheduler_job));
-         *job = scheduler_create_job(k, (long)(*k));
-         scheduler_add_job(job);
-    }
-    printf("finished adding jobs into scheduler. \n");
-
-    // the inserted jobs should be popped out automatically
-    printf("waiting for output to be finished, sleep for 3 secs\n");
-    sleep(3);
-
-    scheduler_destroy();
-    return 0;
+    serv_init();
+     
+    while(1)
+        sleep(3600);
 }

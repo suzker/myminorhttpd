@@ -12,8 +12,8 @@ int arg_queue_time;
 int arg_thread_num;
 int arg_schedule_mode;
 
-const int MODE_GET = 1;
-const int MODE_HEAD = 2;
+const int _MODE_GET = 1;
+const int _MODE_HEAD = 2;
 
 int arg_parser(int argc, char * argv[]){
    init_arg();
@@ -158,7 +158,7 @@ int util_get_response(char * path, int REQ_MODE, char * resp_str){
     long content_len = util_get_req_len(path);
     int status_code = _get_resp_header_(t, header_str, abs_path, content_len);
     strcpy(resp_str, header_str);
-    if (REQ_MODE == MODE_GET){
+    if (REQ_MODE == _MODE_GET){
         switch(t){
             case INVLD:
                 strcat(resp_str, ENTITY_BODY_404);
@@ -295,7 +295,7 @@ int _get_resp_header_(enum RESP_TYPE t, char * header_str, char * abs_path, long
     char * current_time;
     time_t * _tmp_t;
     _tmp_t = _get_current_time_();
-    current_time = (char *)_get_time_str(_tmp_t);
+    current_time = (char *)_get_time_str_(_tmp_t);
     char * last_mod_time;
     switch (t){
         case FRBID:
