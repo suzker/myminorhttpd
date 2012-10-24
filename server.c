@@ -28,6 +28,7 @@ void * serv_t_server(void * arg){
         req = (struct serv_request *)malloc(sizeof(struct serv_request));
         s_job = (struct scheduler_job *)malloc(sizeof(struct scheduler_job));
         remote_fd = nw_accept_incoming();
+        printf("DB: remote_fd at [%p] = %d.\n", remote_fd, *remote_fd);
         /* the server thread will be hanged here til' there is a socket conn. */
         read_output = nw_read_from_remote(remote_fd);
         valid = serv_parse_http_request(read_output, req);
@@ -38,7 +39,7 @@ void * serv_t_server(void * arg){
             req->recv_time = _get_current_time_();
             req->remote_ip = nw_get_remote_addr();
             req_len = util_get_req_len(req->path);
-            printf("DB: check point 3\n");
+            printf("DB: so it must be here!\n");
             *s_job = scheduler_create_job(req, req_len);
             // the add job will triger the semaphore that the consumer of the scheduler had been waiting for.
             scheduler_add_job(s_job);
@@ -104,6 +105,7 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
     }
     printf("DB: b4 util_get_response, everything allright!\n");
     status_code = util_get_response(my_resq->path, my_resq->mode, resp_content);
+    printf("DB: checkpoint 4.\n");
     nw_write_to_remote(my_resq->remote_fd, resp_content);
     time_t * exec_time = _get_current_time_();
     // call log to file and clean up

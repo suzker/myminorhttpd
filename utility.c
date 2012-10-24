@@ -80,7 +80,7 @@ void init_arg(){
     arg_usage_sum = 0;
     strcpy(arg_log_file, "N/A");
     arg_listen_port = 7717;
-    strcpy(arg_root_folder, "/home/zsu2/www/");
+    strcpy(arg_root_folder, "/home/zsu2/www");
     arg_queue_time = 60;
     arg_thread_num = 1;
     arg_schedule_mode = 0;
@@ -142,7 +142,9 @@ long util_get_req_len(char * path){
             len = 0;
             break;
     }
+    printf("DB: freeing abs_path at [%p]...", abs_path); 
     free(abs_path);
+    printf("freed!\n");
     free(idx_path);
     return len;
 }
@@ -179,8 +181,10 @@ int util_get_response(char * path, int REQ_MODE, char * resp_str){
                 strcat(resp_str, ENTITY_BODY_404);
                 break;
             }
-     }
+    }
+    printf("DB: freeing abs_path at [%p] ...",abs_path);
     free(abs_path);
+    printf("freed!\n");
     free(idx_path);
     free(header_str);
     return status_code;
@@ -196,11 +200,15 @@ enum RESP_TYPE get_response_type(char * path){
 
     struct stat file_stat;
     if (stat(abs_path, &file_stat) < 0){
+        printf("DB: freeing abs_path at [%p].", abs_path);
         free(abs_path);
+        printf("... freed!\n");
         free(idx_path);
         return INVLD;
     }
+    printf("DB: freeing abs_path at [%p].", abs_path);
     free(abs_path);
+    printf("... freed!\n");
 
     if (!(file_stat.st_mode & S_IROTH)){
         free(idx_path);
@@ -209,14 +217,14 @@ enum RESP_TYPE get_response_type(char * path){
 
     if (S_ISDIR(file_stat.st_mode)){
         if (get_response_type(idx_path) == EXACT){
-            free(idx_path);
             return DFIDX;
         } else {
-            free(idx_path);
             return FLIST;
         }
+        free(idx_path);
     }
     free(idx_path); 
+
     if (S_ISREG(file_stat.st_mode)){
         return EXACT;
     }
@@ -243,6 +251,7 @@ char * _get_flist_(char * dir_path){
     while (fgets(path, sizeof(path)-1, fp) != NULL) {
         strcat(buff, path);
     }
+    pclose(fp);
     return buff;
 }
 
@@ -256,7 +265,9 @@ long _get_file_len(char * file_path){
 
 char * _get_abs_path_(char * rel_path){
     char * abs_path;
+    printf("DB: rel_path %s.\n", rel_path);
     abs_path = (char *)malloc((strlen(arg_root_folder)+strlen(rel_path))*sizeof(char));
+    printf("DB: abs_path at [%p]\n",abs_path);
     strcpy(abs_path, arg_root_folder);
     strcat(abs_path, rel_path);
     return abs_path;

@@ -37,7 +37,6 @@ int * nw_accept_incoming(){
 }
 
 char * nw_read_from_remote(int *remote_fd){
-    printf("DB: remote_fd = %p = %d\n", remote_fd, *remote_fd);
     char *__buff;
     __buff = (char*)malloc(__buff_size*sizeof(char));
     // clear buffer
