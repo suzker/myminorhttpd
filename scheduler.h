@@ -11,10 +11,6 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#include "queue.h"
-#include "heap.h"
-#include "utility.h"
-
 #define MODE_FIFO 0
 #define MODE_SJF 1
 
@@ -23,6 +19,11 @@ struct scheduler_job{
     void* job_data;
     long len;
 };
+
+// include the local libs after the def of structs to avoid warnings and possible errors
+#include "queue.h"
+#include "heap.h"
+#include "utility.h"
 
 /**
  function: scheduler_init

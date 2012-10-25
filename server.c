@@ -48,7 +48,7 @@ void * serv_t_server(void * arg){
             // the add job will triger the semaphore that the consumer of the scheduler had been waiting for.
             scheduler_add_job(s_job);
         } else {
-            free_request(sreq);
+            serv_free_request(sreq);
         }
         // loop back to accept new incoming data
     }
@@ -67,6 +67,7 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
     nw_close_conn(sreq->remote_fd);
     // call log to file
     util_log_to_file(sreq->remote_ip, &(sreq->recv_time), &(sreq->exec_time), sreq->quot_line, srpy->status_code, srpy->content_len);
+    printf("DB: so what? you can't log?\n");
     // clean up
     serv_free_request(sreq);
     serv_free_reply(srpy);
@@ -75,14 +76,14 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
 }
 
 void serv_free_request(struct serv_request * sreq){
-    free(sreq->path);
-    free(sreq->quot_line);
-    free(sreq->remote_ip);
-    free(sreq->full_content);
+    //free(sreq->path);
+    //free(sreq->quot_line);
+    //free(sreq->remote_ip);
+    //free(sreq->full_content);
     free(sreq);
 }
 
 void serv_free_reply(struct serv_reply * srpy){
-    free(srpy->full_content);
+    //free(srpy->full_content);
     free(srpy);
 }

@@ -89,14 +89,14 @@ int util_log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_ex
     } else {
         pFile = fopen(arg_log_file, "w");
     }
-    
+    if (!pFile){return 0;}
     struct tm *ptm_q, *ptm_e;
     ptm_q = gmtime ( time_queued );
     ptm_e = gmtime ( time_exec );
     char *monstr_q, *monstr_e;
     monstr_q = _int_mon2str_(&(ptm_q->tm_mon));
     monstr_e = _int_mon2str_(&(ptm_e->tm_mon));
-    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_e->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, status, response_length);
+    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_e->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, status, response_length);
     fclose(pFile);
 }
 
@@ -322,7 +322,7 @@ struct serv_reply * util_get_response(struct serv_request * sreq){
         if (i_status == 0){
             if (sreq->mode == MODE_GET){_tmp_body = util_get_flist(abs_path);}
             srpy->status_code = 200;
-            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_200));
+            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_200)*sizeof(char));
             strcpy(_tmp_head_stat, HTTP_STAT_200);
         }
         if (i_status == 3){
@@ -331,14 +331,15 @@ struct serv_reply * util_get_response(struct serv_request * sreq){
                 strcpy(_tmp_body, ENTITY_BODY_403);
             }
             srpy->status_code = 403;
-            _tmp_head_stat = (char *)malloc(strlen(ENTITY_BODY_403));
+            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_403)*sizeof(char));
             strcpy(_tmp_head_stat, HTTP_STAT_403);
         }
         if (i_status == 1){
             if (sreq->mode == MODE_GET){
                 _tmp_body = util_get_file_content(idx_path);
             }
-            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_200));
+            srpy->status_code = 200;
+            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_200)*sizeof(char));
             strcpy(_tmp_head_stat, HTTP_STAT_200);
         }
         free(idx_path);
@@ -348,7 +349,8 @@ struct serv_reply * util_get_response(struct serv_request * sreq){
                 _tmp_body = (char *)malloc(strlen(ENTITY_BODY_404)*sizeof(char));
                 strcpy(_tmp_body, ENTITY_BODY_404);
             }
-            _tmp_head_stat = (char *)malloc(strlen(ENTITY_BODY_404));
+            srpy->status_code = 404;
+            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_404)*sizeof(char));
             strcpy(_tmp_head_stat, HTTP_STAT_404);
         }
         if (f_status == 3){
@@ -356,12 +358,14 @@ struct serv_reply * util_get_response(struct serv_request * sreq){
                 _tmp_body = (char *)malloc(strlen(ENTITY_BODY_403)*sizeof(char));
                 strcpy(_tmp_body, ENTITY_BODY_403);
             }
-            _tmp_head_stat = (char *)malloc(strlen(ENTITY_BODY_403));
+            srpy->status_code = 403;
+            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_403)*sizeof(char));
             strcpy(_tmp_head_stat, HTTP_STAT_403);
         }
         if (f_status == 1){
             if (sreq->mode == MODE_GET){_tmp_body = util_get_file_content(abs_path);}
-            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_200));
+            srpy->status_code = 200;
+            _tmp_head_stat = (char *)malloc(strlen(HTTP_STAT_200)*sizeof(char));
             strcpy(_tmp_head_stat, HTTP_STAT_200);
         }
     }
@@ -369,12 +373,17 @@ struct serv_reply * util_get_response(struct serv_request * sreq){
     if (sreq->mode == MODE_GET){srpy->content_len = strlen(_tmp_body);}
    
     time_t _tmp_time_current;
-    time_t * _tmp_time_lm;
+
     _tmp_time_current = util_get_current_time(); 
     _tmp_head_date = util_get_time_str(&_tmp_time_current);
-    _tmp_time_lm = util_get_file_timestamp(abs_path);
-    _tmp_head_lm = util_get_time_str(_tmp_time_lm);
-    free(_tmp_time_lm);
+    if (i_status == 1 || f_status == 1){
+        time_t * _tmp_time_lm;
+        _tmp_time_lm = util_get_file_timestamp(abs_path);
+        _tmp_head_lm = util_get_time_str(_tmp_time_lm);
+        free(_tmp_time_lm);
+    } else {
+        _tmp_head_lm = _tmp_head_date;
+    }
 
     // write to full_content;
     int _size_of_content = (1024+strlen(_tmp_head_stat)+strlen(_tmp_head_date)+strlen(SERVER_IDTIFIER)+strlen(_tmp_head_lm)+strlen(_tmp_head_ct)+srpy->content_len);
@@ -389,6 +398,8 @@ struct serv_reply * util_get_response(struct serv_request * sreq){
     free(abs_path);
     free(_tmp_head_stat);
     free(_tmp_head_date);
-    free(_tmp_head_lm);
+    if (i_status == 1 || f_status == 1){
+        free(_tmp_head_lm);
+    }
     return srpy;
 }
