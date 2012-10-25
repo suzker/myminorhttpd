@@ -75,14 +75,14 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
 }
 
 void serv_free_request(struct serv_request * sreq){
-    //free(sreq->path);
-    //free(sreq->quot_line);
-    //free(sreq->remote_ip);
-    //free(sreq->full_content);
+    free(sreq->path);
+    free(sreq->quot_line);
+    free(sreq->remote_ip);
+    free(sreq->full_content);
     free(sreq);
 }
 
 void serv_free_reply(struct serv_reply * srpy){
-    //free(srpy->full_content);
+    free(srpy->full_content);
     free(srpy);
 }

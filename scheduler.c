@@ -115,6 +115,7 @@ struct scheduler_job * scheduler_pop(){
         case MODE_SJF:
             _tmp_heap_data = heap_pop(&scheduler_heap, cmp_func);
             _popped_out = (struct scheduler_job *)(_tmp_heap_data->data);
+            if(_tmp_heap_data){free(_tmp_heap_data);}
             break;
         default:
             _popped_out = (struct scheduler_job *)(queue_dequeue(&scheduler_queue));
