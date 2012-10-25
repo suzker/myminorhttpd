@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "server.h"
 
 extern int arg_debug_mode;     //  to enable single thread non-daemond mode (-d)
 extern int arg_usage_sum;      //  to print usage summary in the end (-h)
@@ -43,7 +44,7 @@ int arg_parser(int argc, char * argv[]);
 void init_arg();
 
 /**
- function: log_to_file
+ function: util_log_to_file
   to log to a file if -l opt is enabled
   input:
     char * : the remote ip address
@@ -53,17 +54,19 @@ void init_arg();
     int * : the status code
     long * : the response length in byte
 */
-int log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int status, long response_length);
+int util_log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int status, long response_length);
 
 /**
- function _get_current_time_
+ function util_get_current_time
 */
-time_t * _get_current_time_();
+time_t util_get_current_time();
 
 /**
- function _get_time_str_
+ function util_get_time_str
+  to generate standard GMT time str.
+  * note this function calls malloc inside, thus the return MUST be freed after used.
 */
-char * _get_time_str_(time_t *);
+char * util_get_time_str(time_t *);
 
 /**
  function: _ini_mon2str_ (private)
@@ -90,72 +93,76 @@ char * _int_weekdays_(int * dayint);
 long util_get_req_len(char *);
 
 /**
- function: util_get_response(char *)
-  to get an appropriate response for the input path (dirctory or file or root)
-  *this function is also responsible for constructing appropriate HTTP response headers.
-   input:
-        char * : the requesting path
-        char * : the pointer to the memory to store the response contents
-   output:
-        int : the status code;
-*/
-int util_get_response(char *, int, char *);
-
-/**
- function: get_response_type(char *)
-  given the input path (dirctory, file or root), to see if it's exist or not and and return the appropriate type (404, index.html, .flist, the_page).
-    input:
-         char * : the requesting path
-    output:
-         enum RESP_TYPE : the type
-*/
-enum RESP_TYPE get_response_type(char *);
-
-/**
  function: print_help()
   RT
 */
 void print_help();
 
 /**
- function : _get_flist_
+ function : util_get_flist
   get file list given the url to a dirctory
+  * note this function WILL call malloc inside. free must be called to the return outside of the function.
 */
-char * _get_flist_(char *);
+char * util_get_flist(char *);
 
 /**
- function: _get_file_len
+ function: util_get_file_len
   given a file path return the length of the file
 */
-long _get_file_len(char *);
+long util_get_file_len(char *);
 
 /**
- function: _get_abs_path_(char *)
+ function: util_get_abs_path(char * related_path)
+ * note this function WILL call malloc inside. free must be called to the return outside of the function.
 */
-char * _get_abs_path_(char * path);
+char * util_get_abs_path(char * rel_path);
 
 /**
  function: _get_idx_path_ (char *)
+ * note this function WILL call malloc inside. free must be called to the return outside of the function.
 */
-char * _get_idx_path_ (char* abs_path);
+char * util_get_idx_path (char* abs_path);
 
 /**
  function: _get_file_content_ (char *)
+ * note this function WILL call malloc inside. free must be called to the return outside of the function.
 */
-char * _get_file_content_(char * file_path);
-
-/**
- function: _get_resp_header_(enum RESP_TYPE, char *)
-*/
-int _get_resp_header_(enum RESP_TYPE, char * header_str, char * abs_path, long content_len);
+char * util_get_file_content(char * abs_path);
 
 /**
  function: _get_file_timestamp_(char *)
+  * will malloc new time_t in heap space and need to be freed somewhere else;
 */
-time_t * _get_file_timestamp_(char * file_path);
+time_t * util_get_file_timestamp(char * abs_path);
 
 /**
- function: _get_first_line_(char *)
+ function: util_get_first_line(char *)
+  * will malloc new char[] in heap space and need to be freed somewhere else;
 */
-char * _get_first_line_(char *);
+char * util_get_first_line(char *);
+
+/**
+ function: util_is_file_exist(char *)
+  given a file abs_path, to see if the file exists
+  return 0 for not exist, 1 for regular file(not link), 2 for directory, 3 for no permission;
+*/
+int util_is_file_exist(char * abs_path);
+
+/**
+ function: util_get_response
+  to generate a response regarding to the input request
+  ** note, this func DOES call malloc. a subsequent free to the return should be done outside of this function.
+*/
+struct serv_reply * util_get_response(struct serv_request * sreq);
+
+/**
+ function: util_parse_http_request(struct serv_request *)
+  to parse a http request and return the validation as an int. also if the valid is true, the input serv_request object will be filled w/ req details
+  ** note, this func DOES call malloc. a subsequent free to the return should be done outside of this function.
+   input:
+        struct serv_request *: the structure pointer to store the request details if the request is valid
+   output:
+        1 for valid and 0 for invalid
+*/
+int serv_parse_http_request(struct serv_request *);
 #endif

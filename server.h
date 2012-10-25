@@ -13,20 +13,42 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
-#include "network.h"
+
+struct serv_request{
+    int remote_fd;
+    int mode;
+    char * path;
+    time_t recv_time;
+    time_t exec_time;
+    char * quot_line;
+    char * remote_ip;
+    char * full_content;
+    long req_len;
+};
+
+struct serv_reply{
+    int status_code;
+    char * full_content; // all we have to response.
+    long content_len; // it's the entity-body's length.
+};
+
+// include the utility lib later after the structs are defined to void warnings
 #include "utility.h"
+#include "network.h"
 #include "scheduler.h"
 #include "tpool.h"
 
-struct serv_request{
-    int * remote_fd;
-    int mode;
-    char * path;
-    float protocol;
-    time_t * recv_time;
-    char * quot_req;
-    char * remote_ip;
-};
+extern const int MODE_GET;
+extern const int MODE_HEAD;
+
+extern char * HTTP_STAT_200;
+extern char * HTTP_STAT_403;
+extern char * HTTP_STAT_404;
+
+extern char * ENTITY_BODY_403;
+extern char * ENTITY_BODY_404;
+
+extern const char * SERVER_IDTIFIER;
 
 /**
  function: serv_init
@@ -41,17 +63,6 @@ void serv_init();
 void * serv_t_server(void *);
 
 /**
- function: serv_is_http_request(char *)
-  to check if a request from the remote connection is a valid http(1.0) request.
-   input:
-        char * req_str: the whole request in cstring
-        struct serv_request *: the structure pointer to store the request details if the request is valid
-   output:
-        1 for valid and 0 for invalid
-*/
-int serv_parse_http_request(char *, struct serv_request *);
-
-/**
  function: serv_reply_to_remote
   to reply to a certain remote given a scheduler_job. will call utility to retrieve the content of the file responsible for the request and write to output.
   ** this func will be sent to the tpool to work inside one of the worker threads.
@@ -61,4 +72,16 @@ int serv_parse_http_request(char *, struct serv_request *);
         1 for success otherwise failed
 */
 void* serv_reply_to_remote(struct scheduler_job *);
+
+/**
+ function: serv_free_request()
+  to free a serv_request struct
+*/
+void serv_free_request(struct serv_request * sreq);
+
+/**
+ function: serv_free_reply()
+  to free a serv_reply struct
+*/
+void serv_free_reply(struct serv_reply * srpy);
 #endif

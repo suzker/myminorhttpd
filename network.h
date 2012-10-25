@@ -26,9 +26,9 @@ void nw_listen_on_socket(int portno);
  function: nw_accept_incoming
   to open put the socket into the accepting status to serve incoming requests
    output:
-        int * remote_fd: the remote file descriptor of the remote connection
+        int remote_fd: the remote file descriptor of the remote connection
 */
-int * nw_accept_incoming();
+int nw_accept_incoming();
 
 /**
  function: nw_read_from_remote
@@ -38,7 +38,7 @@ int * nw_accept_incoming();
    output:
         char *: the output string
 */
-char * nw_read_from_remote(int *remote_fd);
+char * nw_read_from_remote(int remote_fd);
 
 /**
  function: nw_write_to_remote
@@ -47,12 +47,12 @@ char * nw_read_from_remote(int *remote_fd);
         remote_fd: the file descriptor of the remote connection
         content: the content to be written to the remote connection
 */
-void nw_write_to_remote(int *remote_fd, char *content);
+void nw_write_to_remote(int remote_fd, char *content);
 
 /**
  function: nw_close_conn
 */
-void nw_close_conn(int *);
+void nw_close_conn(int remote_fd);
 
 /**
  function: nw_close_serv
@@ -68,7 +68,9 @@ void nw_destroy();
 
 /**
  function: nw_get_remote_addr
-  return the remote_addr that are being deal with 
+  return the remote_addr that are being deal with
+  * note: the inet_ntoa function will return an internal static buffer which will be rewrite on a subsequent call.
+  *       thus we need to malloc a new place to store this item;
 */
 char * nw_get_remote_addr();
 #endif

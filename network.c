@@ -25,37 +25,36 @@ void nw_listen_on_socket(int portno){
     listen(__socket_fd, __SOMAXCONN);
 }
 
-int * nw_accept_incoming(){
+int nw_accept_incoming(){
     __len_remote = sizeof(__serv_addr);
-    int *__remote_fd;
-    __remote_fd = (int *)malloc(sizeof(int));
-    *__remote_fd = accept(__socket_fd, (struct sockaddr *) &__remote_addr, &__len_remote);
-    if (*__remote_fd < 0){
+    int __remote_fd;
+    __remote_fd = accept(__socket_fd, (struct sockaddr *) &__remote_addr, &__len_remote);
+    if (__remote_fd < 0){
         perror("Error accepting remote connections, exiting...\n");
     }
     return __remote_fd;
 }
 
-char * nw_read_from_remote(int *remote_fd){
+char * nw_read_from_remote(int remote_fd){
     char *__buff;
     __buff = (char*)malloc(__buff_size*sizeof(char));
     // clear buffer
     bzero(__buff, __buff_size);
     int count = 1;
     int n = 0;
-    n = read(*remote_fd, __buff, (__buff_size - 1));
+    n = read(remote_fd, __buff, (__buff_size - 1));
     if (n<1) { perror("Error reading stream, exiting...\n");}
     return __buff;
 }
 
-void nw_write_to_remote(int *remote_fd, char *content){
+void nw_write_to_remote(int remote_fd, char *content){
     int n = 0;
-    n = write(*remote_fd, content, strlen(content));
+    n = write(remote_fd, content, strlen(content));
     if (n < 0) {perror("Error writing responds to the remote connection, exiting...\n");}
 }
 
-void nw_close_conn(int *remote_fd){
-    close(*remote_fd);
+void nw_close_conn(int remote_fd){
+    close(remote_fd);
 }
 
 void nw_close_serv(){
