@@ -90,13 +90,15 @@ int util_log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_ex
         pFile = fopen(arg_log_file, "w");
     }
     if (!pFile){return 0;}
-    struct tm *ptm_q, *ptm_e;
-    ptm_q = gmtime ( time_queued );
-    ptm_e = gmtime ( time_exec );
+    struct tm ptm_q, ptm_e;
+    ptm_q = *(gmtime ( time_queued ));
+    ptm_e = *(gmtime ( time_exec ));
     char *monstr_q, *monstr_e;
-    monstr_q = _int_mon2str_(&(ptm_q->tm_mon));
-    monstr_e = _int_mon2str_(&(ptm_e->tm_mon));
-    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_e->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, status, response_length);
+    monstr_q = _int_mon2str_(&(ptm_q.tm_mon));
+    monstr_e = _int_mon2str_(&(ptm_e.tm_mon));
+    //fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_q->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, status, response_length);
+    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q.tm_mday, monstr_q, 1900+ptm_q.tm_year, ptm_q.tm_hour, ptm_q.tm_min, ptm_q.tm_sec, ptm_q.tm_mday, monstr_e, 1900+ptm_e.tm_year, ptm_e.tm_hour, ptm_e.tm_min, ptm_e.tm_sec, quote, status, response_length);
+
     fclose(pFile);
 }
 

@@ -67,7 +67,6 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
     nw_close_conn(sreq->remote_fd);
     // call log to file
     util_log_to_file(sreq->remote_ip, &(sreq->recv_time), &(sreq->exec_time), sreq->quot_line, srpy->status_code, srpy->content_len);
-    printf("DB: so what? you can't log?\n");
     // clean up
     serv_free_request(sreq);
     serv_free_reply(srpy);
