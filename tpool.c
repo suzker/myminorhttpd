@@ -1,7 +1,7 @@
 #include "tpool.h"
 
 struct queue_entity __tpool_q_idle_t;
-pthread_mutex_t __tpool_mutex_idle_t, __tpool_mutex_job_slot;
+pthread_mutex_t __tpool_mutex_return_lock;
 sem_t __tpool_sem_q_full, __tpool_sem_q_empty;
 pthread_t * __tpool_t_workers;
 pthread_cond_t * __tpool_cond_workers;
@@ -12,8 +12,7 @@ void *(*tpool_working_instruction)(struct scheduler_job *);
 
 void tpool_init(void *(*func)(struct scheduler_job *)){
     queue_init(&__tpool_q_idle_t, arg_thread_num);
-    pthread_mutex_init(&__tpool_mutex_idle_t, NULL);
-    pthread_mutex_init(&__tpool_mutex_job_slot, NULL);
+    pthread_mutex_init(&__tpool_mutex_return_lock, NULL);
     sem_init(&__tpool_sem_q_full, 0, arg_thread_num);
     sem_init(&__tpool_sem_q_empty, 0, 0);
     __tpool_t_workers = (pthread_t *)malloc(arg_thread_num * sizeof(pthread_t));
@@ -43,17 +42,17 @@ void * tpool_thread_worker(void * arg){
     struct scheduler_job * the_job;
     int * my_id = (int *) arg;
     while (1){
-        pthread_mutex_lock(&__tpool_mutex_job_slot);
-        pthread_cond_wait(&(__tpool_cond_workers[*my_id]), &__tpool_mutex_job_slot);
+        pthread_mutex_lock(&__tpool_mutex_return_lock);
+        pthread_cond_wait(&(__tpool_cond_workers[*my_id]), &__tpool_mutex_return_lock);
+        printf("DB: i'm worker #%d and i'm working now!\n", *my_id);
         the_job = __tpool_job_slot[*my_id];
-        pthread_mutex_unlock(&__tpool_mutex_job_slot);
+        pthread_mutex_unlock(&__tpool_mutex_return_lock);
         if (the_job){
             tpool_working_instruction(the_job);
         }
         // assume that the return of the "working_instruction" means finished
-        printf("DB: returning...\n");
         tpool_recycle_idle_t(my_id);
-        printf("DB: returned! \n");
+        printf("DB: i'm worker #%d and i'm finished and returned!\n", *my_id);
     }
 }
 
@@ -69,17 +68,15 @@ void * tpool_thread_assigner(void * arg){
         sem_wait(&__tpool_sem_q_full);
         __next_job = scheduler_get_job();
         printf("DB: successfully got job. \n");
-        pthread_mutex_lock(&__tpool_mutex_idle_t);
+        pthread_mutex_lock(&__tpool_mutex_return_lock);
         __next_worker_id = queue_dequeue(&__tpool_q_idle_t);
-        pthread_mutex_unlock(&__tpool_mutex_idle_t);
         
         if (__next_job && __next_worker_id){
-            pthread_mutex_lock(&__tpool_mutex_job_slot);
             __tpool_job_slot[*__next_worker_id] = __next_job;
-            pthread_mutex_unlock(&__tpool_mutex_job_slot);
         } else {
             printf("[ERR] Invalid job or worker thread, skipped. \n");
         }
+        pthread_mutex_unlock(&__tpool_mutex_return_lock);
         // wake up the dedicated worker
         printf("DB: waking up the worker thread for job. \n");
         pthread_cond_signal(&(__tpool_cond_workers[*__next_worker_id]));
@@ -88,22 +85,19 @@ void * tpool_thread_assigner(void * arg){
 }
 
 int tpool_recycle_idle_t(int * idx_idle_t){
-    pthread_mutex_lock(&__tpool_mutex_job_slot);
+    pthread_mutex_lock(&__tpool_mutex_return_lock);
     __tpool_job_slot[*idx_idle_t] = NULL;
-    pthread_mutex_unlock(&__tpool_mutex_job_slot);
     sem_wait(&__tpool_sem_q_empty);
-    pthread_mutex_lock(&__tpool_mutex_idle_t);
     //safe critical section
     queue_enqueue(&__tpool_q_idle_t, idx_idle_t);
     //end of safe CS
-    pthread_mutex_unlock(&__tpool_mutex_idle_t);
+    pthread_mutex_unlock(&__tpool_mutex_return_lock);
     sem_post(&__tpool_sem_q_full);
 }
 
 void tpool_destroy(){
     queue_free(&__tpool_q_idle_t);
-    pthread_mutex_destroy(&__tpool_mutex_idle_t);
-    pthread_mutex_destroy(&__tpool_mutex_job_slot);
+    pthread_mutex_destroy(&__tpool_mutex_return_lock);
     sem_destroy(&__tpool_sem_q_full);
     sem_destroy(&__tpool_sem_q_empty);
     free(__tpool_t_workers);
