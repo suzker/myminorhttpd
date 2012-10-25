@@ -234,9 +234,9 @@ time_t * util_get_file_timestamp(char * abs_path){
 char * util_get_first_line(char * quote){
     int i = 0;
     while(i < strlen(quote)){
-       if (quote[i] == '\n')
-           break;
-       ++i;
+        if (quote[i] == '\n')
+            break;
+        ++i;
     }
     char * sub;
     sub = (char * )malloc((i+1)*sizeof(char));
@@ -265,7 +265,10 @@ int util_parse_http_request(struct serv_request * sreq){
     // split
     char * req_args[3];
     char * pch;
-    pch  = strtok(sreq->full_content, " ");
+    // create a copy of the full_content of sreq because the strtok will probabily changed to content
+    char * _dup_full_content = (char *)malloc(strlen(sreq->full_content)*sizeof(char));
+    strcpy(_dup_full_content, sreq->full_content);
+    pch  = strtok(_dup_full_content, " ");
     int i = 0;
     while (pch != NULL && i<3){
         req_args[i++] = pch;
@@ -278,14 +281,17 @@ int util_parse_http_request(struct serv_request * sreq){
     } else if(strcmp(req_args[1], "HEAD") == 0){
         sreq->mode = MODE_HEAD;
     } else {
+        free(_dup_full_content);
         return 0;
     }
 
     // URL
     if (req_args[1][0]!='/'){
+        free(_dup_full_content);
         return 0;
     } else {
-        sreq->path = req_args[1];
+        sreq->path = (char *)malloc(strlen(req_args[1])*sizeof(char));
+        sreq->path = strcpy(sreq->path, req_args[1]);
     }
 
     // HTTP/1.x or 0.9
@@ -293,9 +299,11 @@ int util_parse_http_request(struct serv_request * sreq){
         char subbuff[7];
         memcpy(subbuff, req_args[2], 7);
         if (strcmp(subbuff, "HTTP/1.")!=0 && strcmp(subbuff, "HTTP/0.")!=0){
+            free(_dup_full_content);
             return 0;
         }
     } else {
+        free(_dup_full_content);
         return 0;
     }
     return 1;

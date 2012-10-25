@@ -78,7 +78,7 @@ void serv_free_request(struct serv_request * sreq){
     free(sreq->path);
     free(sreq->quot_line);
     free(sreq->remote_ip);
-    free(sreq->full_content);
+    if(sreq->full_content){free(sreq->full_content);}
     free(sreq);
 }
 
