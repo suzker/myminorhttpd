@@ -28,7 +28,8 @@ void * serv_t_server(void * arg){
     struct serv_request * sreq;
     int valid;
     struct scheduler_job * s_job;
-    printf("[DB] Main server thread started.\n");
+    if (arg_debug_mode)
+        printf("[DB] Main server thread started.\n");
     while (1){
         remote_fd = nw_accept_incoming();
         sreq = (struct serv_request *)malloc(sizeof(struct serv_request));
@@ -41,17 +42,21 @@ void * serv_t_server(void * arg){
         valid = util_parse_http_request(sreq);
         if (valid == 1){
             sreq->quot_line = util_get_first_line(sreq->full_content);
-            printf("[DB] Valid request received.\n");
-            printf("[DB] =================Request Content====================\n");
-            printf("%s\n", sreq->full_content);
-            printf("[DB] ==================End of Content====================\n");
+            if (arg_debug_mode){
+                printf("[DB] Valid request received.\n");
+                printf("[DB] vvvvvvvvvvvvvvv| Request Content |vvvvvvvvvvvvvvvvvv\n");
+                printf("%s\n", sreq->full_content);
+                printf("[DB] ^^^^^^^^^^^^^^^^| End of Content |^^^^^^^^^^^^^^^^^^\n");
+            }
             sreq->req_len = util_get_req_len(sreq->path);
             *s_job = scheduler_create_job(sreq, sreq->req_len);
             // the add job will triger the semaphore that the consumer of the scheduler had been waiting for.
             scheduler_add_job(s_job);
-            printf("[DB] job (#%p) has been added to scheduler.\n", s_job);
+            if (arg_debug_mode)
+                printf("[DB] job (#%p) has been added to scheduler.\n", s_job);
         } else {
-            printf("[DB] Discarding invalid requests (neither HTTP/1.x or HTTP/0.9). \n");
+            if (arg_debug_mode)
+                printf("[DB] Discarding invalid requests (neither HTTP/1.x or HTTP/0.9). \n");
             serv_free_request(sreq);
         }
         // loop back to accept new incoming data
@@ -93,5 +98,6 @@ void serv_destroy(){
     nw_destroy();
     tpool_destroy();
     scheduler_destroy();
-    printf("[DB] server destroyed, ready to exit.\n");
+    if (arg_debug_mode)
+        printf("[DB] server destroyed, ready to exit.\n");
 }
