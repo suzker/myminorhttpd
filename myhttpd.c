@@ -18,15 +18,21 @@ int main(int argc, char *argv[]){
         return 0;
     }
     if (arg_debug_mode == 1){ // debug mode...
+        arg_thread_num = 1; // overwirtes the number of threads
         char cmd_input[1024];
         char cmd_bye[] = "bye";
+        char cmd_clear[] = "clear";
         printf("[DB] Entering Debug mode.\n");
         serv_init();
         printf("[DB] Server initialized, type 'bye' and enter at anytime to terminate server.\n");
         do {
             gets (cmd_input);
             printf ("\n");
-        } while (strcmp (cmd_input, cmd_bye) != 0);
+            if (strcmp (cmd_input, cmd_bye) == 0)
+                break;
+            if (strcmp (cmd_input, cmd_clear) == 0)
+                system(cmd_clear);
+        } while (1);
         serv_destroy();
         return 0;
     }

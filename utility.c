@@ -9,6 +9,9 @@ int arg_queue_time;
 int arg_thread_num;
 int arg_schedule_mode;
 
+const char user_home_path[] = "/home/";
+const char www_dir_name[] = "www/";
+
 int arg_parser(int argc, char * argv[]){
    init_arg();
    int i;
@@ -144,7 +147,10 @@ long util_get_req_len(char * path){
 }
 
 void util_print_help(){
-    printf("Usage: \n\t-d:\tenter debug mode,\n\t-h:\tprint usage summary and exit.\n\t-l [op]:\tlog all requests to the given file [op].\n\t-p [op]:\tlisten on the given port[op], default: 8080.\n\t-r [op]:\tset the root directory for the http server to [op].\n\t-t [op]:\tset the queuing time to [op] seconds, default: 60.\n\t-n [op]:\tset the number of threads waiting ready in execution thread pool to [op], default: 4.\n\t-s [op]:\tset the scheduling policy to either FCFS or SJF, default: FCFS.\r\n");
+    printf("==========================================\n");
+    printf(" myhttpd - Yet Another Minor HTTP server\n");
+    printf("==========================================\n");
+    printf("Usage: \n\t-d:     \tenter debug mode,\n\t-h:     \tprint usage summary and exit.\n\t-l [op]:\tlog all requests to the given file [op].\n\t-p [op]:\tlisten on the given port[op], default: 8080.\n\t-r [op]:\tset the root directory for the http server to [op].\n\t-t [op]:\tset the queuing time to [op] seconds, default: 60.\n\t-n [op]:\tset the number of threads waiting ready in execution thread pool to [op], default: 4.\n\t-s [op]:\tset the scheduling policy to either FCFS or SJF, default: FCFS.\r\n");
 }
 
 char * util_get_flist(char * dir_path){
@@ -176,9 +182,26 @@ long util_get_file_len(char * file_path){
 
 char * util_get_abs_path(char * rel_path){
     char * abs_path;
-    abs_path= (char *)malloc((strlen(arg_root_folder)+strlen(rel_path)+5)*sizeof(char));
-    strcpy(abs_path, arg_root_folder);
-    strcat(abs_path, rel_path);
+    if (rel_path[0] == '/' && rel_path[1] == '~'){
+        char *name;
+        int i;
+        for (i=2; i<strlen(rel_path); ++i){
+            if (rel_path[i]=='/')
+                break;
+        }
+        name = malloc((i-2)*sizeof(char));
+        strncpy(name, &(rel_path[2]), (i-1));
+        abs_path = malloc((strlen(rel_path)+strlen(user_home_path)+strlen(www_dir_name)+5)*sizeof(char));
+        strcat(abs_path, user_home_path);
+        strcat(abs_path, name);
+        strcat(abs_path, www_dir_name);
+        strncat(abs_path, &(rel_path[i+1]), (strlen(rel_path)-1-i));
+        free(name);
+    } else {
+        abs_path= (char *)malloc((strlen(arg_root_folder)+strlen(rel_path)+5)*sizeof(char));
+        strcpy(abs_path, arg_root_folder);
+        strcat(abs_path, rel_path);
+    }
     return abs_path;
 }
 
@@ -239,12 +262,12 @@ char * util_get_first_line(char * quote){
     char * sub;
     int i = 0;
     while(i < strlen(quote)){
-        if (quote[i] == '\n' || quote[i] == '\r');
+        if (quote[i] == '\n' || quote[i] == '\r')
             break;
         ++i;
     }
     sub = (char *)malloc((i+1)*sizeof(char));    
-    strncpy(sub, quote, i);
+    strncat(sub, quote, i);
     return sub;
 }
 

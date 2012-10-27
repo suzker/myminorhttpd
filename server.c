@@ -51,6 +51,7 @@ void * serv_t_server(void * arg){
             scheduler_add_job(s_job);
             printf("[DB] job (#%p) has been added to scheduler.\n", s_job);
         } else {
+            printf("[DB] Discarding invalid requests (neither HTTP/1.x or HTTP/0.9). \n");
             serv_free_request(sreq);
         }
         // loop back to accept new incoming data

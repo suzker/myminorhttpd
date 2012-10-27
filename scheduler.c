@@ -1,6 +1,7 @@
 #include "scheduler.h"
 
 const int scheduler_max_wait = 2000; // maximum number of waiting conns, no new socket conn will be taken if this limit is reached
+int scheduler_wait_num = 1;
 struct queue_entity scheduler_queue;
 struct heap_entity scheduler_heap;
 
@@ -8,19 +9,22 @@ pthread_mutex_t scheduler_joblist_mutex;
 sem_t scheduler_sem_full, scheduler_sem_empty;
 
 void scheduler_init(){
+    if (arg_debug_mode != 1){
+        scheduler_wait_num = scheduler_max_wait;
+    }
     pthread_mutex_init(&scheduler_joblist_mutex, NULL);
     sem_init(&scheduler_sem_full, 0, 0);
-    sem_init(&scheduler_sem_empty, 0, scheduler_max_wait);
+    sem_init(&scheduler_sem_empty, 0, scheduler_wait_num);;
 
     switch (arg_schedule_mode){
         case MODE_FIFO:
-            queue_init(&scheduler_queue, scheduler_max_wait);
+            queue_init(&scheduler_queue, scheduler_wait_num);
             break;
         case MODE_SJF:
             heap_init(&scheduler_heap);
             break;
         default:
-            queue_init(&scheduler_queue, scheduler_max_wait);
+            queue_init(&scheduler_queue, scheduler_wait_num);
             break;
     }
 }
