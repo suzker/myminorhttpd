@@ -28,10 +28,8 @@ void * serv_t_server(void * arg){
     struct serv_request * sreq;
     int valid;
     struct scheduler_job * s_job;
-    printf("DB: server thread started!\n");
     while (1){
         remote_fd = nw_accept_incoming();
-        /* the server thread will be hanged here til' there is a socket conn. */
         sreq = (struct serv_request *)malloc(sizeof(struct serv_request));
         s_job = (struct scheduler_job *)malloc(sizeof(struct scheduler_job));
         sreq->recv_time = util_get_current_time();
@@ -41,7 +39,6 @@ void * serv_t_server(void * arg){
         sreq->full_content = nw_read_from_remote(sreq->remote_fd);
         valid = util_parse_http_request(sreq);
         if (valid == 1){
-            printf("DB: it's a valid request!\n");
             sreq->quot_line = util_get_first_line(sreq->full_content);
             sreq->req_len = util_get_req_len(sreq->path);
             *s_job = scheduler_create_job(sreq, sreq->req_len);
@@ -55,7 +52,6 @@ void * serv_t_server(void * arg){
 }
 
 void * serv_reply_to_remote(struct scheduler_job * the_job){
-    printf("DB: working on the job..\n");
     // get the request from the job
     struct serv_request * sreq = (struct serv_request *)the_job->job_data;
     sreq->exec_time = util_get_current_time();
@@ -71,12 +67,11 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
     serv_free_request(sreq);
     serv_free_reply(srpy);
     free(the_job);
-    printf("DB: no prob finishing job.\n");
 }
 
 void serv_free_request(struct serv_request * sreq){
     free(sreq->path);
-    free(sreq->quot_line);
+    if(sreq->quot_line){free(sreq->quot_line);}
     free(sreq->remote_ip);
     if(sreq->full_content){free(sreq->full_content);}
     free(sreq);

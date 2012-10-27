@@ -33,7 +33,6 @@ struct scheduler_job scheduler_create_job(void * job_data, long len){
 }
 
 int scheduler_add_job(struct scheduler_job * new_job){
-    printf("DB: new job arrived!\n");
     int _status;
     struct heap_data * new_heap_data;
     sem_wait(&scheduler_sem_empty);

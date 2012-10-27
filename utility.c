@@ -76,7 +76,7 @@ void init_arg(){
     arg_listen_port = 7717;
     strcpy(arg_root_folder, "/home/zsu2/www");
     arg_queue_time = 60;
-    arg_thread_num = 1;
+    arg_thread_num = 4;
     arg_schedule_mode = 0;
 }
 
@@ -96,7 +96,6 @@ int util_log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_ex
     char *monstr_q, *monstr_e;
     monstr_q = _int_mon2str_(&(ptm_q.tm_mon));
     monstr_e = _int_mon2str_(&(ptm_e.tm_mon));
-    //fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q->tm_mday, monstr_q, 1900+ptm_q->tm_year, ptm_q->tm_hour, ptm_q->tm_min, ptm_q->tm_sec, ptm_q->tm_mday, monstr_e, 1900+ptm_e->tm_year, ptm_e->tm_hour, ptm_e->tm_min, ptm_e->tm_sec, quote, status, response_length);
     fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q.tm_mday, monstr_q, 1900+ptm_q.tm_year, ptm_q.tm_hour, ptm_q.tm_min, ptm_q.tm_sec, ptm_q.tm_mday, monstr_e, 1900+ptm_e.tm_year, ptm_e.tm_hour, ptm_e.tm_min, ptm_e.tm_sec, quote, status, response_length);
 
     fclose(pFile);
@@ -232,15 +231,15 @@ time_t * util_get_file_timestamp(char * abs_path){
 }
 
 char * util_get_first_line(char * quote){
+    char * sub;
     int i = 0;
     while(i < strlen(quote)){
-        if (quote[i] == '\n')
+        if (quote[i] == '\n' || quote[i] == '\r');
             break;
         ++i;
     }
-    char * sub;
-    sub = (char * )malloc((i+1)*sizeof(char));
-    memcpy(sub, quote, i);
+    sub = (char *)malloc((i+1)*sizeof(char));    
+    strncpy(sub, quote, i);
     return sub;
 }
 
@@ -262,12 +261,12 @@ int util_is_file_exist(char * abs_path){
 }
 
 int util_parse_http_request(struct serv_request * sreq){
+    int rtr = 1;
     // split
     char * req_args[3];
     char * pch;
     // create a copy of the full_content of sreq because the strtok will probabily changed to content
-    char * _dup_full_content = (char *)malloc(strlen(sreq->full_content)*sizeof(char));
-    strcpy(_dup_full_content, sreq->full_content);
+    char * _dup_full_content = strdup(sreq->full_content);
     pch  = strtok(_dup_full_content, " ");
     int i = 0;
     while (pch != NULL && i<3){
@@ -278,17 +277,15 @@ int util_parse_http_request(struct serv_request * sreq){
     // GET or HEAD
     if (strcmp(req_args[0], "GET")==0){
         sreq->mode = MODE_GET;
-    } else if(strcmp(req_args[1], "HEAD") == 0){
+    } else if(strcmp(req_args[0], "HEAD") == 0){
         sreq->mode = MODE_HEAD;
     } else {
-        free(_dup_full_content);
-        return 0;
+        rtr = 0;
     }
 
     // URL
     if (req_args[1][0]!='/'){
-        free(_dup_full_content);
-        return 0;
+        rtr = 0;
     } else {
         sreq->path = (char *)malloc(strlen(req_args[1])*sizeof(char));
         sreq->path = strcpy(sreq->path, req_args[1]);
@@ -297,16 +294,15 @@ int util_parse_http_request(struct serv_request * sreq){
     // HTTP/1.x or 0.9
     if (strlen(req_args[2])>=8){
         char subbuff[7];
-        memcpy(subbuff, req_args[2], 7);
+        strncpy(subbuff, req_args[2], 7);
         if (strcmp(subbuff, "HTTP/1.")!=0 && strcmp(subbuff, "HTTP/0.")!=0){
-            free(_dup_full_content);
-            return 0;
+            rtr = 0;
         }
     } else {
-        free(_dup_full_content);
-        return 0;
+        rtr = 0;
     }
-    return 1;
+    free(_dup_full_content);
+    return rtr;
 }
 
 struct serv_reply * util_get_response(struct serv_request * sreq){
@@ -398,7 +394,7 @@ struct serv_reply * util_get_response(struct serv_request * sreq){
     // write to full_content;
     int _size_of_content = (1024+strlen(_tmp_head_stat)+strlen(_tmp_head_date)+strlen(SERVER_IDTIFIER)+strlen(_tmp_head_lm)+strlen(_tmp_head_ct)+srpy->content_len);
     srpy->full_content = (char *)malloc(_size_of_content*sizeof(char));
-    sprintf(srpy->full_content, "HTTP/1.0 %s\r\nDate:%s\nServer:%s\nLast-Modified:%s\nContent-Type:%s\nContent-Length%ld\n\r\n",_tmp_head_stat,_tmp_head_date,SERVER_IDTIFIER,_tmp_head_lm,_tmp_head_ct,srpy->content_len);
+    sprintf(srpy->full_content, "HTTP/1.0 %s\r\nDate:%s\nServer:%s\nLast-Modified:%s\nContent-Type:%s\nContent-Length:%ld\n\r\n",_tmp_head_stat,_tmp_head_date,SERVER_IDTIFIER,_tmp_head_lm,_tmp_head_ct,srpy->content_len);
     if (sreq->mode == MODE_GET){
         strcat(srpy->full_content, _tmp_body);
     }
