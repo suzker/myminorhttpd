@@ -12,16 +12,10 @@ int main(int argc, char *argv[]){
         util_print_help();
         return 0;
     }
-    /**
-    printf("debug mode on: %d\n", arg_debug_mode);
-    printf("display sum when terminate: %d\n", arg_usage_sum);
-    printf("path to save log file: %s\n", arg_log_file);
-    printf("port listening: %d\n", arg_listen_port);
-    printf("root folder: %s\n", arg_root_folder);
-    printf("queueing time: %d\n", arg_queue_time);
-    printf("number of threads: %d\n", arg_thread_num);
-    printf("schedule mode: %d\n", arg_schedule_mode);
-    */
+    if (arg_usage_sum == 1){
+        util_print_help();
+        return 0;
+    }
     if (arg_debug_mode == 1){ // debug mode...
         char cmd_input[1024];
         char cmd_bye[] = "bye";

@@ -1,7 +1,7 @@
 /**
  a queue implementation in C using a dynamic array
     author: Zhiliang Su (zsu2[at]buffalo[dot]edu)
-    revision: 07 Oct 2012
+    revision: 26 Oct 2012
 */
 #ifndef _HEADER_QUEUE_
 #define _HEADER_QUEUE_
