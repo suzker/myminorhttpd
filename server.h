@@ -84,4 +84,10 @@ void serv_free_request(struct serv_request * sreq);
   to free a serv_reply struct
 */
 void serv_free_reply(struct serv_reply * srpy);
+
+/**
+ function: serv_destroy()
+  to destroy the whole server, ready to exit
+*/
+void serv_destroy();
 #endif

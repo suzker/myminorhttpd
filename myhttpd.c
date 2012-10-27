@@ -8,6 +8,7 @@
 #include "server.h"
 
 int main(int argc, char *argv[]){
+    system("clear");
     if (!arg_parser(argc, argv)){
         util_print_help();
         return 0;
@@ -21,11 +22,12 @@ int main(int argc, char *argv[]){
         char cmd_bye[] = "bye";
         printf("[DB] Entering Debug mode.\n");
         serv_init();
-        printf("[DB] Server initialized, type 'bye' to terminate server.\n");
+        printf("[DB] Server initialized, type 'bye' and enter at anytime to terminate server.\n");
         do {
-            printf ("[DB] Wrong command, type 'bye' to terminate the server.\n");
             gets (cmd_input);
+            printf ("\n");
         } while (strcmp (cmd_input, cmd_bye) != 0);
+        serv_destroy();
         return 0;
     }
     else{ // daemond mode

@@ -28,6 +28,7 @@ void * serv_t_server(void * arg){
     struct serv_request * sreq;
     int valid;
     struct scheduler_job * s_job;
+    printf("[DB] Main server thread started.\n");
     while (1){
         remote_fd = nw_accept_incoming();
         sreq = (struct serv_request *)malloc(sizeof(struct serv_request));
@@ -40,10 +41,15 @@ void * serv_t_server(void * arg){
         valid = util_parse_http_request(sreq);
         if (valid == 1){
             sreq->quot_line = util_get_first_line(sreq->full_content);
+            printf("[DB] Valid request received.\n");
+            printf("[DB] =================Request Content====================\n");
+            printf("%s\n", sreq->full_content);
+            printf("[DB] ==================End of Content====================\n");
             sreq->req_len = util_get_req_len(sreq->path);
             *s_job = scheduler_create_job(sreq, sreq->req_len);
             // the add job will triger the semaphore that the consumer of the scheduler had been waiting for.
             scheduler_add_job(s_job);
+            printf("[DB] job (#%p) has been added to scheduler.\n", s_job);
         } else {
             serv_free_request(sreq);
         }
@@ -80,4 +86,11 @@ void serv_free_request(struct serv_request * sreq){
 void serv_free_reply(struct serv_reply * srpy){
     free(srpy->full_content);
     free(srpy);
+}
+
+void serv_destroy(){
+    nw_destroy();
+    tpool_destroy();
+    scheduler_destroy();
+    printf("[DB] server destroyed, ready to exit.\n");
 }

@@ -82,6 +82,7 @@ void init_arg(){
 
 int util_log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_exec, char quote[], int status, long response_length){
     if (strcmp(arg_log_file, "N/A") == 0){return 0;}
+    char _log_str[65535];
     FILE * pFile;
     if (pFile = fopen(arg_log_file, "r")){ 
         fclose(pFile);
@@ -96,8 +97,12 @@ int util_log_to_file(char remote_ip_addr[], time_t *time_queued, time_t *time_ex
     char *monstr_q, *monstr_e;
     monstr_q = _int_mon2str_(&(ptm_q.tm_mon));
     monstr_e = _int_mon2str_(&(ptm_e.tm_mon));
-    fprintf(pFile, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q.tm_mday, monstr_q, 1900+ptm_q.tm_year, ptm_q.tm_hour, ptm_q.tm_min, ptm_q.tm_sec, ptm_q.tm_mday, monstr_e, 1900+ptm_e.tm_year, ptm_e.tm_hour, ptm_e.tm_min, ptm_e.tm_sec, quote, status, response_length);
-
+    sprintf(_log_str, "%s - [%02d/%s/%d:%02d:%02d:%02d - 0000] [%02d/%s/%d:%02d:%02d:%02d - 0000] \"%s\" %d %ld\r\n", remote_ip_addr, ptm_q.tm_mday, monstr_q, 1900+ptm_q.tm_year, ptm_q.tm_hour, ptm_q.tm_min, ptm_q.tm_sec, ptm_q.tm_mday, monstr_e, 1900+ptm_e.tm_year, ptm_e.tm_hour, ptm_e.tm_min, ptm_e.tm_sec, quote, status, response_length);
+    fprintf(pFile, "%s", _log_str);
+    printf("[DB] logging to log file.\n");
+    printf("[DB] =================Logging Content====================\n");
+    printf("%s", _log_str);
+    printf("[DB] ==================End of Content====================\n");
     fclose(pFile);
 }
 

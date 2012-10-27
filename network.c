@@ -9,7 +9,7 @@ struct sockaddr_in __serv_addr, __remote_addr;
 void nw_listen_on_socket(int portno){
     __socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (__socket_fd < 0){
-       perror("Error establishing socket on port, exiting... \n"); 
+       perror("Error establishing socket, exiting... \n"); 
     }
     __portnum = portno;
     bzero((char *)&__serv_addr, sizeof(__serv_addr)); // clear and fill zeros in socket addr structure
@@ -19,7 +19,8 @@ void nw_listen_on_socket(int portno){
     __serv_addr.sin_port = htons(__portnum);
     //bind
     if (bind(__socket_fd, (struct sockaddr *) &__serv_addr, sizeof(__serv_addr)) < 0){
-        perror("Error binding the socket to the port, exiting...\n");
+        perror("Error binding the socket to the given port, exiting...\n");
+        exit (1);
     }
     //listen
     listen(__socket_fd, __SOMAXCONN);

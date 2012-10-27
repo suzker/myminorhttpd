@@ -41,16 +41,19 @@ void tpool_init(void *(*func)(struct scheduler_job *)){
 void * tpool_thread_worker(void * arg){
     struct scheduler_job * the_job;
     int * my_id = (int *) arg;
+    printf("[DB] worker thread (#%d - %p) activated.\n", *my_id, my_id);
     while (1){
         pthread_mutex_lock(&__tpool_mutex_return_lock);
         pthread_cond_wait(&(__tpool_cond_workers[*my_id]), &__tpool_mutex_return_lock);
         the_job = __tpool_job_slot[*my_id];
         pthread_mutex_unlock(&__tpool_mutex_return_lock);
+        printf("[DB] worker thread (#%d) awaked and assigned to job (#%p).\n", *my_id, the_job);
         if (the_job){
             tpool_working_instruction(the_job);
         }
         // assume that the return of the "working_instruction" means finished
         tpool_recycle_idle_t(my_id);
+        printf("[DB] worker thread (#%d) finished job and returned to thread pool.\n", *my_id);
     }
 }
 
@@ -60,7 +63,7 @@ void * tpool_thread_assigner(void * arg){
 
     // sleep for queueing delay
     sleep(arg_queue_time);
-
+    printf("[DB] thread pool assigner thread activated.\n");
     while (1){
         sem_wait(&__tpool_sem_q_full);
         __next_job = scheduler_get_job();
@@ -74,6 +77,7 @@ void * tpool_thread_assigner(void * arg){
         }
         pthread_mutex_unlock(&__tpool_mutex_return_lock);
         // wake up the dedicated worker
+        printf("[DB] job (#%p) pulled out of the scheduler by thread pool and will be assigned to worker (#%d).\n", __next_job, *__next_worker_id);
         pthread_cond_signal(&(__tpool_cond_workers[*__next_worker_id]));
         sem_post(&__tpool_sem_q_empty);
     }
