@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
         char cmd_clear[] = "clear";
         printf("[DB] Entering Debug mode.\n");
         serv_init();
-        printf("[DB] Server initialized, type 'bye' and enter at anytime to terminate server.\n");
+        printf("[DB] Server initialized, type 'bye' to terminate server and 'clear' to purge screen outputs.\n");
         do {
             gets (cmd_input);
             printf ("\n");
@@ -37,6 +37,7 @@ int main(int argc, char *argv[]){
         return 0;
     }
     else{ // daemond mode
+        printf("[myhttpd] server running on daemond mode ... ");
         pid_t pid = 0;
         pid_t sid = 0;
         pid = fork();
@@ -45,6 +46,7 @@ int main(int argc, char *argv[]){
             exit(1);
         }
         if (pid > 0){ // the parent will see this
+            printf("OK!\n[myhttpd] use 'ps -A | grep myhttpd' command to see the pid of the daemond. \n");
             exit(0);
         }
         umask(0);
