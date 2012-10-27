@@ -73,7 +73,7 @@ void init_arg(){
     arg_debug_mode = 0;
     arg_usage_sum = 0;
     strcpy(arg_log_file, "N/A");
-    arg_listen_port = 7717;
+    arg_listen_port = 8080;
     strcpy(arg_root_folder, "/home/zsu2/www");
     arg_queue_time = 60;
     arg_thread_num = 4;
@@ -138,8 +138,8 @@ long util_get_req_len(char * path){
     return len;
 }
 
-void print_help(){
-    // TODO tba
+void util_print_help(){
+    printf("Usage: \n\t-d:\tenter debug mode,\n\t-h:\tprint usage summary and exit.\n\t-l [op]:\tlog all requests to the given file [op].\n\t-p [op]:\tlisten on the given port[op], default: 8080.\n\t-r [op]:\tset the root directory for the http server to [op].\n\t-t [op]:\tset the queuing time to [op] seconds, default: 60.\n\t-n [op]:\tset the number of threads waiting ready in execution thread pool to [op], default: 4.\n\t-s [op]:\tset the scheduling policy to either FCFS or SJF, default: FCFS.\r\n");
 }
 
 char * util_get_flist(char * dir_path){

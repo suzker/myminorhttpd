@@ -93,10 +93,10 @@ char * _int_weekdays_(int * dayint);
 long util_get_req_len(char *);
 
 /**
- function: print_help()
+ function: util_print_help()
   RT
 */
-void print_help();
+void util_print_help();
 
 /**
  function : util_get_flist
