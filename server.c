@@ -48,7 +48,11 @@ void * serv_t_server(void * arg){
                 printf("%s\n", sreq->full_content);
                 printf("[DB] ^^^^^^^^^^^^^^^^| End of Content |^^^^^^^^^^^^^^^^^^\n");
             }
-            sreq->req_len = util_get_req_len(sreq->path);
+            if (sreq->mode == MODE_HEAD){
+                sreq->req_len = 0;// the head request should have higher priority rgarding to it's reply
+            } else {
+                sreq->req_len = util_get_req_len(sreq->path);
+            }
             *s_job = scheduler_create_job(sreq, sreq->req_len);
             // the add job will triger the semaphore that the consumer of the scheduler had been waiting for.
             scheduler_add_job(s_job);
@@ -74,7 +78,7 @@ void * serv_reply_to_remote(struct scheduler_job * the_job){
     nw_write_to_remote(sreq->remote_fd, srpy->full_content);
     nw_close_conn(sreq->remote_fd);
     // call log to file
-    util_log_to_file(sreq->remote_ip, &(sreq->recv_time), &(sreq->exec_time), sreq->quot_line, srpy->status_code, srpy->content_len);
+    util_log_to_file(sreq->remote_ip, &(sreq->recv_time), &(sreq->exec_time), sreq->quot_line, srpy->status_code, sreq->req_len);
     // clean up
     serv_free_request(sreq);
     serv_free_reply(srpy);
