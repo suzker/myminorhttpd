@@ -1,8 +1,11 @@
 A Minor HTTP 1.0 server w/ POSIX multi-threading and shecheduling functions
 
+Main Features:
+(nio) None-Block I/O
+(POSIX) portable multi-threading
+
 author: Zhiliang Su
 email: zsu2 [at] buffalo [dot] edu
-forked: anilesh
 
 copyrights reserved.
 if you are from the same course and happened to find this repo, please don't copy part/whole of our codes for your own project w/o reference and agreement from us. This is related to academic integrity.
