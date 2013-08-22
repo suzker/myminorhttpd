@@ -1,7 +1,7 @@
 A Minor HTTP 1.0 server w/ POSIX multi-threading and shecheduling functions
 
 Main Features:
-(nio) None-Block I/O
+(Scheduler) FIFO/SJF
 (POSIX) portable multi-threading
 
 author: Zhiliang Su
