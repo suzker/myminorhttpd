@@ -2,7 +2,9 @@ A Minor HTTP 1.0 server w/ POSIX multi-threading and shecheduling functions
 
 Main Features:
 (Scheduler) FIFO/SJF
+(Thread Pool) you know.
 (POSIX) portable multi-threading
+(General Design) 
 
 author: Zhiliang Su
 email: zsu2 [at] buffalo [dot] edu
